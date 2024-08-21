@@ -14,7 +14,7 @@ export const registerUserController = async (req, res) => {
       const newUser = await registerUserService(user);
       res.status(201).json({status: true, message: "OTP send" ,data:newUser});
     } catch (error) {
-      res.status(400).json({ status: false, message:"An error has occured" , data: error.message });
+      res.status(400).json({ status: false, message:error.message , data: {} });
     }
   };
   
@@ -25,8 +25,7 @@ export const registerUserController = async (req, res) => {
       res.status(200).json({ status:true , message: "Otp Sent", data:user });
 
     } catch (error) {
-      console.error("Login error:", error);
-      res.status(401).json({ status: false, message:"An error has occured" , data: error.message });
+      res.status(401).json({ status: false, message:error.message , data:{}});
     }
   };
   
@@ -39,8 +38,9 @@ export const registerUserController = async (req, res) => {
       }
       res.status(200).json({ user });
     } catch (error) {
-      console.error("Get user by ID error:", error);
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({
+        status: false, message:error.message , data: {}
+      });
     }
   };
 
@@ -53,6 +53,7 @@ export const registerUserController = async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "All fields are required",
+                data:{},
             });
         }
         // Call the service function
@@ -73,11 +74,11 @@ export const registerUserController = async (req, res) => {
             data: { token: token, user: user },
         });}
 
-        return res.status(400).json({status: false, message:"Invalid Validation"})
+        return res.status(400).json({status: false, message:"Invalid Validation", data:{}})
     } catch (error) {
         
         return res.status(500).json({
-          status: false, message:"An error has occured" , data: error.message
+          status: false, message:error.message , data: {}
         });
     }
 };
@@ -90,10 +91,11 @@ export const resendOtpController = async(req,res) =>{
       return res.status(200).json({status:true, message: "OTP resent on your number", data:response});
     }
     else{
-      return res.status(400).json({status: false, message:"Cannot resend OTP" })
+      return res.status(400).json({status: false, message:"Cannot resend OTP" , data:{}})
     }
   }catch(error){
-    console.log(error);
-    throw error;
+    return res.status(500).json({
+      status: false, message:error.message , data: {}
+    });
   }
 }
