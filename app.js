@@ -11,6 +11,9 @@ app.use(express.json());
 
 
 //ROUTES
+app.use('', (req,res)=>{
+return res.json({message:"Welcome to cab booking application's backend"})
+})
 app.use('/user', userRouter);
 
 
