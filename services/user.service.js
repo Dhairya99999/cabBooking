@@ -6,7 +6,7 @@ import { comparePassword, hashPassword } from "../utils/passwordManager.js";
 export const registerUserService = async (user) => {
     try {
       const existingUser = await UserModel.findOne({
-        $or: [{ email: user.email }, { phoneNumber: user.phoneNumber }],
+        $or: [{ email: user.email }, { mobileNumber: user.mobileNumber }],
       });
       if (existingUser) {
         throw new Error("Existing user. Please log in");
@@ -30,11 +30,8 @@ export const registerUserService = async (user) => {
           },
         });
         await newUser.save();
-        return {
-          status: true,
-          message: "OTP send Successful",
-          data: response.data,
-        };
+        return response.data;
+        
     } catch (error) {
       throw error;
     }
@@ -119,7 +116,7 @@ export const verifyOtpService = async (mobileNumber, orderId, otp) => {
         throw new Error("User not found");
       }
     } else {
-      throw new Error("OTP verification failed: " + response.data.message || response.data.status);
+      throw new Error("OTP verification failed");
     }
   } catch (error) {
     console.error("Error during OTP verification:", error.response ? error.response.data : error.message);
