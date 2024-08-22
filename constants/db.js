@@ -5,12 +5,13 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000,  // Increase timeout to 30 seconds
       dbName: "cabBookingDB",
     });
-    console.log("Database is connected");
+    console.log("MongoDB Connected: " + mongoose.connection.host);
   } catch (error) {
-    console.log("error-->",error) 
-    throw new Error("Internal Server Error");
+    console.error("MongoDB connection error: ", error.message);
+    process.exit(1);  // Exit the process with failure
   }
 };
 
