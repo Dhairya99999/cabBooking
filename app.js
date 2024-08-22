@@ -2,14 +2,14 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import dotenv from "dotenv";
-import connectDB from "./constants/db.js";  // Adjust the path as necessary
+import connectDB from "./constants/db.js";  
 
 dotenv.config();
 
 import userRouter from './routes/user.route.js';
-import rideRoutes from './routes/cab.routes.js'; // Make sure this path is correct
+import rideRoutes from './routes/cab.routes.js'; 
 import cabRoutes from './routes/cab.routes.js'
-
+import bookingRoutes from "./routes/bookings.routes.js"
 
 
 const app = express();
@@ -24,8 +24,6 @@ app.use(express.json());
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-app.use('/rides', rideRoutes); // This sets the base path for cab routes
-app.use('/cab', cabRoutes);
 
 // Root Route
 app.use('/', (req, res, next) => {
@@ -36,6 +34,9 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/user', userRouter);
+app.use('/api/bookings', bookingRoutes);
+app.use('/rides', rideRoutes); 
+app.use('/cab', cabRoutes);
 
 server.listen(port,'0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
