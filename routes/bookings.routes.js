@@ -4,7 +4,7 @@ import { verifyToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/history', verifyToken, async (req, res) => {
+router.get('/booking-history', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId; // Assuming req.user is set by the auth middleware
     const bookingHistory = await getBookingHistory(userId);

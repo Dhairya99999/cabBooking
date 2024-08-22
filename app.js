@@ -34,7 +34,7 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/user', userRouter);
-app.use('/api/bookings', bookingRoutes);
+app.use('/cab', bookingRoutes);
 app.use('/rides', rideRoutes); 
 app.use('/cab', cabRoutes);
 
