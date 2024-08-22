@@ -6,7 +6,7 @@ const carSchema = new mongoose.Schema({
     required: true,
   },
   rate_per_km: {
-    type: Number,
+    type: String,
     required: true,
   },
   tagline: String,
@@ -24,7 +24,7 @@ const carSchema = new mongoose.Schema({
   },
 
   passenger_capacity:{
-    type:Number
+    type:String
   },
 
   luggage_capacity:{
@@ -34,10 +34,10 @@ const carSchema = new mongoose.Schema({
     type:String
   },
   rating:{
-    type:Number
+    type:String
   },
   total_ratings:{
-    type:Number
+    type:String
   },
   extra_km_fare:{
     type:String

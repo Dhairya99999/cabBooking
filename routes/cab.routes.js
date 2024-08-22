@@ -1,5 +1,5 @@
 import express from 'express';
-import listAvailableCabs from '../services/cab.service.js';
+import listAvailableCabs, { getCabDetails } from '../services/cab.service.js';
 
 const router = express.Router();
 
@@ -23,5 +23,20 @@ router.get('/cab-listing', async (req, res) => {
     res.status(500).json({ status: false, message: error.message, data: {} });
   }
 });
+
+router.get('/cab-details', async(req,res)=>{
+  try{
+    const {car_id} = req.query;
+
+    const response = await getCabDetails(car_id);
+    if(response){
+      res.status(200).json({status:true, message:"Cab details fetched", data: response })
+    }
+    else
+    res.status(200).json({status:false, message:"Cab details cannot be fetched", data: {} })
+  }catch(error){
+    res.status(500).json({status:false, message:error.message, data:{}});
+  }
+})
 
 export default router;

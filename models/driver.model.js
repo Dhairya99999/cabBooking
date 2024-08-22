@@ -30,8 +30,12 @@ const driverSchema = new mongoose.Schema({
     type:Boolean
   },
   driver_rating:{
-    type:Number
-  }
+    type:String
+  },
+  additional_information:[{
+    type:String
+  }],
+
 });
 
 driverSchema.index({ location: '2dsphere' });
