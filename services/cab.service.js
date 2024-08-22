@@ -28,13 +28,13 @@ const listAvailableCabs = async (startLocation, endLocation) => {
 
     return {
       id: driver.carDetails._id.toString(),
-      car_model: driver.carDetails.model,
-      car_type: driver.carDetails.type,
+      car_model: driver.carDetails.car_name,
+      car_type: driver.carDetails.car_type,
       rate_per_km: `₹${driver.carDetails.rate_per_km}`,
       tagline: driver.carDetails.tagline || 'Your ride, your choice',
       fare: `₹${parseFloat(fare.toFixed(2))}`, // Fare calculated based on distance and rate per km
       fare_amount_display: `₹${fare.toFixed(2)}`, // Display format with currency symbol
-      image_url :driver.carDetails.imageUrl,
+      image_url :driver.carDetails.image_url,
     };
   });
 
