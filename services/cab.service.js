@@ -71,8 +71,8 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     ]);
 
     //remove extra address
-    const cleanStartRoute = startRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
-    const cleanEndRoute = endRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
+    // const cleanStartRoute = startRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
+    // const cleanEndRoute = endRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
 
     //calculate pickup time
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
@@ -80,7 +80,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
 
     // Format the response
     const response = {
-      route: `${cleanStartRoute} - ${cleanEndRoute}`,  
+      route: `${startRoute} - ${endRoute}`,  
       date: formatDate(new Date()), 
       pickup_time: pickupTime, 
       car: {
@@ -120,31 +120,80 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
 async function getLocationName(latitude, longitude) {
   const API_KEY = process.env.GOOGLE_API_KEY;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${API_KEY}`;
-  try {
-      const response = await axios.get(url);
-      const results = response.data.results;
 
-      if (results.length > 0) {
-          return results[0].formatted_address;
-      } else {
-          return 'No location found';
-      }
+  try {
+    const response = await axios.get(url);
+    const results = response.data.results;
+
+    if (results.length > 0) {
+      const addressComponents = results[0].address_components;
+
+      // Define the types we are interested in, in the desired order
+      const targetTypes = [    
+        "sublocality_level_2",    
+        "sublocality_level_1",
+        "administrative_area_level_3",
+        "administrative_area_level_1",
+      ];
+
+      // Create an object to map the types to their long_names
+      const typeToLongName = {};
+
+      addressComponents.forEach(component => {
+        component.types.forEach(type => {
+          if (targetTypes.includes(type)) {
+            typeToLongName[type] = component.long_name || null;
+          }
+        });
+      });
+
+      // Map the target types to their corresponding long_names and filter out null values
+      const orderedLongNames = targetTypes
+        .map(type => typeToLongName[type])
+        .filter(name => name !== null && name !== undefined); // Ensure null and undefined are filtered out
+
+      // Return the orderedLongNames array or a message if it's empty
+      return orderedLongNames.length > 0 ? orderedLongNames : 'No location found';
+    } else {
+      return 'No location found';
+    }
   } catch (error) {
-      console.error('Error fetching location:', error);
-      return 'Error fetching location';
+    console.error('Error fetching location:', error);
+    return 'Error fetching location';
   }
 }
+
 
 //pickup time
 async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
   const API_KEY = process.env.GOOGLE_API_KEY;
   const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${driverLat},${driverLng}&destinations=${startLat},${startLng}&key=${API_KEY}`;
+  
   try {
     const response = await axios.get(url);
     const result = response.data.rows[0].elements[0];
+    
     if (result.status === 'OK') {
-      const duration = `${Math.round(result.duration.value/60)} minutes`; // duration in seconds
-      return duration 
+      const durationInSeconds = result.duration.value; // duration in seconds
+      const durationInMinutes = Math.round(durationInSeconds / 60);
+      
+      // Calculate hours and minutes
+      const hours = Math.floor(durationInMinutes / 60);
+      const minutes = durationInMinutes % 60;
+      
+      // Format duration
+      let formattedDuration = '';
+      if (hours > 0) {
+        formattedDuration += `${hours} hour${hours > 1 ? 's' : ''}`;
+      }
+      if (minutes > 0) {
+        if (formattedDuration) {
+          formattedDuration += ' ';
+        }
+        formattedDuration += `${minutes} min${minutes > 1 ? 's' : ''}`;
+      }
+      
+      return formattedDuration || '0 minutes';
     } else {
       throw new Error(`API returned status: ${result.status}`);
     }
