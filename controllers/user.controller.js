@@ -6,7 +6,7 @@ import {registerUserService,
         sendOtp} 
          from "../services/user.service.js";
 
-const JWT_KEY = process.env.JWT_KEY || "54fdsacas892ndsac8";
+const JWT_KEY = process.env.JWT_SECRET;
 
 export const registerUserController = async (req, res) => {
     try {
@@ -65,7 +65,7 @@ export const registerUserController = async (req, res) => {
                 userId: user._id,  
                 email: user.email, 
             },
-            JWT_KEY,
+            JWT_KEY || "54fdsacas892ndsac8",
             // { expiresIn: '1h' } 
         );
 

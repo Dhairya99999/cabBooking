@@ -172,7 +172,7 @@ export const getBookingHistory = async (userId) => {
         endLocation: booking.endLocation,
         kmCovered: `${booking.kmCovered} km`,
         amountPaid: `₹${booking.amountPaid}`,
-        date: booking.date,
+        date: formatDate(booking.date),
       })),
       ongoingAndCompletedBookings: ongoingAndCompletedBookings.map(booking => ({
         id: booking._id.toString(),
@@ -183,7 +183,7 @@ export const getBookingHistory = async (userId) => {
         endLocation: booking.endLocation,
         kmCovered: `${booking.kmCovered} km`,
         amountPaid: `₹${booking.amountPaid}`,
-        date: booking.date,
+        date: formatDate(booking.date),
       })),
     };
   } catch (error) {
