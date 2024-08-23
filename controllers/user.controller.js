@@ -66,7 +66,7 @@ export const registerUserController = async (req, res) => {
                 email: user.email, 
             },
             JWT_KEY,
-            { expiresIn: '1h' } 
+            // { expiresIn: '1h' } 
         );
 
         // Respond with the user data and token

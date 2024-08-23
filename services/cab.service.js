@@ -3,6 +3,7 @@ import Car from '../models/car.model.js';
 import Booking from "../models/booking.model.js"
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
 import axios from "axios";
+import { formatDate } from '../utils/miscUtils.js';
 
 export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
@@ -75,8 +76,8 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
 
     // Format the response
     const response = {
-      route: { start: startRoute, end: endRoute },  
-      date: new Date().toISOString(), 
+      route: `${startRoute} - ${endRoute}`,  
+      date: formatDate(new Date()), 
       pickup_time: pickupTime, 
       car: {
         car_name: carDetails.car_name,
