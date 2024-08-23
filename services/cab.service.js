@@ -4,6 +4,7 @@ import Booking from "../models/booking.model.js"
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
 import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
+import { UserModel } from '../models/user.model.js';
 
 export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
@@ -243,3 +244,19 @@ export const getBookingHistory = async (userId) => {
     throw new Error('Error fetching booking history: ' + error.message);
   }
 };
+
+export const triggerRideRequest = async(userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng)=>{
+  //Socket connection plus connection to DB pending
+
+  const user = await UserModel.findById(userId)
+  const cab = await Car.findById(cab_id);
+  if(!user){
+    throw error("User does not exists")
+  }
+  if(!cab){
+    return "Cab does not exists"
+  }
+  else {
+    return "Success"
+  }
+}

@@ -1,4 +1,4 @@
-import { getCabDetails, getBookingHistory, listAvailableCabs } from '../services/cab.service.js';
+import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest } from '../services/cab.service.js';
 
 // Controller to handle fetching available cabs
 export const getAvailableCabs = async (req, res) => {
@@ -48,3 +48,33 @@ export const fetchBookingHistory = async (req, res) => {
     res.status(500).json({ status: false, message: error.message, data:{} });
   }
 };
+
+export const triggerRideRequestController = async (req,res)=>{
+  try{
+    const {userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng} = req.body;
+    let missingFields = [];
+    if (!userId) missingFields.push("user");
+    if (!cab_id) missingFields.push("cab");
+    if (!pickup_address) missingFields.push("pickup address");
+    if (pickup_lat == null) missingFields.push("pickup latitude");
+    if (pickup_lng == null) missingFields.push("pickup longitude");
+    if (!drop_address) missingFields.push("drop address");
+    if (drop_lat == null) missingFields.push("drop latitude");
+    if (drop_lng == null) missingFields.push("drop longitude");
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        status: false,
+        message: `Missing fields: ${missingFields.join(", ")}`,
+        data: {}
+      });
+    }
+    const response = await triggerRideRequest(userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng);
+    if(!response){
+      res.status(400).json({status:false, message:"Cannot initiate a request", data:{}})
+    }
+    res.status(200).json({status:true, message:"Success", data:{}})
+  }catch(error){
+    res.status(500).json({status:false, message:error.message, data:{}})
+  }
+}

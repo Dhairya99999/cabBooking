@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAvailableCabs, fetchCabDetails, fetchBookingHistory } from '../controllers/cab.controller.js';
+import { getAvailableCabs, fetchCabDetails, fetchBookingHistory, triggerRideRequestController } from '../controllers/cab.controller.js';
 import { verifyToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -10,5 +10,6 @@ router.get('/cab-listing', getAvailableCabs);
 router.post('/cab-details', fetchCabDetails);
 // Route to get booking history
 router.get('/booking-history', verifyToken, fetchBookingHistory);
-
+//Route for trigger request
+router.post('/trigger-request',triggerRideRequestController)
 export default router;
