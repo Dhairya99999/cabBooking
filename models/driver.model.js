@@ -35,6 +35,9 @@ const driverSchema = new mongoose.Schema({
   additional_information:[{
     type:String
   }],
+  verification_text:{
+    type:String
+  }
 
 });
 

@@ -70,13 +70,17 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
       getLocationName(endLat, endLng)
     ]);
 
+    //remove extra address
+    const cleanStartRoute = startRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
+    const cleanEndRoute = endRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
+
     //calculate pickup time
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
 
 
     // Format the response
     const response = {
-      route: `${startRoute} - ${endRoute}`,  
+      route: `${cleanStartRoute} - ${cleanEndRoute}`,  
       date: formatDate(new Date()), 
       pickup_time: pickupTime, 
       car: {
@@ -96,7 +100,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
         free_waiting_time: carDetails.free_waiting_time,
       },
       driver_details: {
-        verification: driverDetails.isVerified,
+        verification: driverDetails.verification_text,
         driver_rating: driverDetails.driver_rating,
         cab_rating: carDetails.rating,  
       },
