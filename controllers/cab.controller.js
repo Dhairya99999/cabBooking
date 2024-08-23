@@ -25,9 +25,9 @@ export const getAvailableCabs = async (req, res) => {
 // Controller to handle fetching cab details
 export const fetchCabDetails = async (req, res) => {
   try {
-    const { car_id, startLat, startLng, endLat, endLng } = req.body;
+    const { car_id, start_lat, start_lng, end_lat, end_lng } = req.body;
 
-    const response = await getCabDetails(startLat, startLng, endLat, endLng, car_id);
+    const response = await getCabDetails(start_lat, start_lng, end_lat, end_lng, car_id);
     if (response) {
       res.status(200).json({ status: true, message: "Cab details fetched", data: response });
     } else {
