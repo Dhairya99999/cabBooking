@@ -49,7 +49,7 @@ export const registerUserController = async (req, res) => {
 
     try {
         // Validate input
-        if (!mobileNumber || !orderId || !otp || !firstName || !lastName) {
+        if (!mobileNumber || !orderId || !otp ) {
             return res.status(400).json({
                 status: false,
                 message: "All fields are required",

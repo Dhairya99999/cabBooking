@@ -8,8 +8,7 @@ dotenv.config();
 
 import userRouter from './routes/user.route.js';
 import rideRoutes from './routes/cab.routes.js'; 
-import cabRoutes from './routes/cab.routes.js'
-import bookingRoutes from "./routes/bookings.routes.js"
+import cabRoutes from './routes/cab.routes.js';
 
 
 const app = express();
@@ -34,7 +33,6 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/user', userRouter);
-app.use('/cab', bookingRoutes);
 app.use('/rides', rideRoutes); 
 app.use('/cab', cabRoutes);
 

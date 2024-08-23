@@ -1,8 +1,10 @@
-import Driver from '../models/driver.model.js'; // Ensure this import is correct
+import Driver from '../models/driver.model.js';
 import Car from '../models/car.model.js';
+import Booking from "../models/booking.model.js"
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
+import axios from "axios";
 
-const listAvailableCabs = async (startLocation, endLocation) => {
+export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
 
   if (startLocation) {
@@ -16,12 +18,11 @@ const listAvailableCabs = async (startLocation, endLocation) => {
       },
     };
   }
-
   // Fetch available drivers
 
   // const drivers = await Driver.find(query).populate('carDetails');  //IMPORTANT
 
-    const drivers = await Driver.find().populate('carDetails');   
+    const drivers = await Driver.find().populate('carDetails');   //just for development purposes to list data
   // Calculate the distance between start and end locations once
   const distance = calculateDistance(startLocation, endLocation);
 
@@ -48,9 +49,8 @@ const listAvailableCabs = async (startLocation, endLocation) => {
   };
 };
 
-export default listAvailableCabs;
 
-export const getCabDetails = async (cabId) => {
+export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) => {
   try {
     // fetching details
     const carDetails = await Car.findById(cabId).exec();
@@ -61,13 +61,23 @@ export const getCabDetails = async (cabId) => {
     }
 
     // Fetch driver details related to the car
-    const driverDetails = await Driver.find({ carDetails: cabId }).exec();
+    const driverDetails = await Driver.findOne({ carDetails: cabId }).exec();
+
+    //fetch geolocation
+    const [startRoute, endRoute] = await Promise.all([
+      getLocationName(startLat, startLng),
+      getLocationName(endLat, endLng)
+    ]);
+
+    //calculate pickup time
+    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
+
 
     // Format the response
     const response = {
-      route: '',  
+      route: { start: startRoute, end: endRoute },  
       date: new Date().toISOString(), 
-      pickup_time: '', 
+      pickup_time: pickupTime, 
       car: {
         car_name: carDetails.car_name,
         car_type: carDetails.car_type,
@@ -84,19 +94,98 @@ export const getCabDetails = async (cabId) => {
         cancellation_policy: carDetails.cancellation_policy,
         free_waiting_time: carDetails.free_waiting_time,
       },
-      driver_details: driverDetails.map(driver => ({
-        verification: driver.isVerified,
-        driver_rating: driver.driver_rating,
+      driver_details: {
+        verification: driverDetails.isVerified,
+        driver_rating: driverDetails.driver_rating,
         cab_rating: carDetails.rating,  
-      })),
+      },
       inclusions: carDetails.inclusions,
       extracharge: carDetails.extracharge,
-      additional_info: driverDetails.flatMap(driver => driver.additional_information)
+      additional_info: driverDetails.additional_information
     };
 
     return response;
   } catch (error) {
     console.error(error);
     throw new Error('Error fetching cab details');
+  }
+};
+
+// geolocation name
+async function getLocationName(latitude, longitude) {
+  const API_KEY = process.env.GOOGLE_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${API_KEY}`;
+  try {
+      const response = await axios.get(url);
+      const results = response.data.results;
+
+      if (results.length > 0) {
+          return results[0].formatted_address;
+      } else {
+          return 'No location found';
+      }
+  } catch (error) {
+      console.error('Error fetching location:', error);
+      return 'Error fetching location';
+  }
+}
+
+//pickup time
+async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
+  const API_KEY = process.env.GOOGLE_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${driverLat},${driverLng}&destinations=${startLat},${startLng}&key=${API_KEY}`;
+  try {
+    const response = await axios.get(url);
+    const result = response.data.rows[0].elements[0];
+    if (result.status === 'OK') {
+      const duration = `${Math.round(result.duration.value/60)} minutes`; // duration in seconds
+      return duration 
+    } else {
+      throw new Error(`API returned status: ${result.status}`);
+    }
+  } catch (error) {
+    console.error('Error calculating pickup time:', error.response ? error.response.data : error.message);
+    return 'Error calculating pickup time';
+  }
+}
+
+export const getBookingHistory = async (userId) => {
+  try {
+    // Fetch all bookings for the user
+
+    // const bookings = await Booking.find({ user: userId }); !!important
+    const bookings = await Booking.find(); // just for development purposes to display data
+
+    // Separate bookings into categories
+    const cancelledBookings = bookings.filter(booking => booking.status === 'CANCELLED');
+    const ongoingAndCompletedBookings = bookings.filter(booking => booking.status !== 'CANCELLED');
+
+    return {
+  
+      cancelledBookings: cancelledBookings.map(booking => ({
+        id: booking._id.toString(),
+        status: booking.status,
+        car_name: booking.car_name,
+        car_image: booking.car_image,
+        startLocation: booking.startLocation,
+        endLocation: booking.endLocation,
+        kmCovered: `${booking.kmCovered} km`,
+        amountPaid: booking.amountPaid,
+        date: booking.date,
+      })),
+      ongoingAndCompletedBookings: ongoingAndCompletedBookings.map(booking => ({
+        id: booking._id.toString(),
+        status: booking.status,
+        car_name: booking.car_name,
+        car_image: booking.car_image,
+        startLocation: booking.startLocation,
+        endLocation: booking.endLocation,
+        kmCovered: `${booking.kmCovered} km`,
+        amountPaid: booking.amountPaid,
+        date: booking.date,
+      })),
+    };
+  } catch (error) {
+    throw new Error('Error fetching booking history: ' + error.message);
   }
 };

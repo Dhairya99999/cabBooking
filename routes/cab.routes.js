@@ -1,42 +1,14 @@
 import express from 'express';
-import listAvailableCabs, { getCabDetails } from '../services/cab.service.js';
+import { getAvailableCabs, fetchCabDetails, fetchBookingHistory } from '../controllers/cab.controller.js';
+import { verifyToken } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/cab-listing', async (req, res) => {
-  try {
-    const { startLng, startLat, endLng, endLat } = req.query;
-
-    // Validate and create location objects
-    const startLocation = startLng && startLat ? { startLng: parseFloat(startLng), startLat: parseFloat(startLat) } : null;
-    const endLocation = endLng && endLat ? { endLng: parseFloat(endLng), endLat: parseFloat(endLat) } : null;
-
-    // Check if locations are valid
-    if (!startLocation || !endLocation) {
-      return res.status(400).json({ status: false, message: 'Invalid location parameters', data: {} });
-    }
-
-    // Fetch available cabs
-    const cabs = await listAvailableCabs(startLocation, endLocation);
-    res.status(200).json({ status: true, message: "Cab details fetched", data: cabs });
-  } catch (error) {
-    res.status(500).json({ status: false, message: error.message, data: {} });
-  }
-});
-
-router.get('/cab-details', async(req,res)=>{
-  try{
-    const {car_id} = req.query;
-
-    const response = await getCabDetails(car_id);
-    if(response){
-      res.status(200).json({status:true, message:"Cab details fetched", data: response })
-    }
-    else
-    res.status(200).json({status:false, message:"Cab details cannot be fetched", data: {} })
-  }catch(error){
-    res.status(500).json({status:false, message:error.message, data:{}});
-  }
-})
+// Route to get available cabs
+router.get('/cab-listing', getAvailableCabs);
+// Route to get cab details
+router.post('/cab-details', fetchCabDetails);
+// Route to get booking history
+router.get('/booking-history', verifyToken, fetchBookingHistory);
 
 export default router;
