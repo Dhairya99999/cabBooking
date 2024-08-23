@@ -72,10 +72,10 @@ inclusions:{
     type:String
   },
   state_taxes:{
-    type:String
+    type:Boolean
   },
   toll_charges:{
-    type:String
+    type:Boolean
   }
 }
 
