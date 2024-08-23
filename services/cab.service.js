@@ -133,7 +133,7 @@ async function getLocationName(latitude, longitude) {
         "sublocality_level_2",    
         "sublocality_level_1",
         "administrative_area_level_3",
-        "administrative_area_level_1",
+        // "administrative_area_level_1",
       ];
 
       // Create an object to map the types to their long_names
