@@ -170,7 +170,7 @@ export const getBookingHistory = async (userId) => {
         startLocation: booking.startLocation,
         endLocation: booking.endLocation,
         kmCovered: `${booking.kmCovered} km`,
-        amountPaid: booking.amountPaid,
+        amountPaid: `₹${booking.amountPaid}`,
         date: booking.date,
       })),
       ongoingAndCompletedBookings: ongoingAndCompletedBookings.map(booking => ({
@@ -181,7 +181,7 @@ export const getBookingHistory = async (userId) => {
         startLocation: booking.startLocation,
         endLocation: booking.endLocation,
         kmCovered: `${booking.kmCovered} km`,
-        amountPaid: booking.amountPaid,
+        amountPaid: `₹${booking.amountPaid}`,
         date: booking.date,
       })),
     };

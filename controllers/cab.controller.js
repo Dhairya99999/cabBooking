@@ -45,6 +45,6 @@ export const fetchBookingHistory = async (req, res) => {
     const bookingHistory = await getBookingHistory(userId);
     res.status(200).json({ status: true, message: "Booking History Fetched", data: bookingHistory });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ status: false, message: error.message, data:{} });
   }
 };

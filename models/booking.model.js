@@ -24,11 +24,11 @@ const bookingSchema = new mongoose.Schema({
     required: true,
   },
   kmCovered: {
-    type: Number,
+    type: String,
     required: true,
   },
   amountPaid: {
-    type: Number,
+    type: String,
     required: true,
   },
   date: {
