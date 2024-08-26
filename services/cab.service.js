@@ -283,7 +283,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     //calculate trip amount
     const distance = parseFloat(trip.distance);
     const ratePerKm = parseFloat(cab.rate_per_km);
-    const trip_amount = distance * ratePerKm;
+    const trip_amount = `₹ ${(distance * ratePerKm).toFixed(2)}  `;
 
     const date = new Date();
     const options = { hour: '2-digit', minute: '2-digit', hour12: true };
