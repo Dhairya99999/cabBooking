@@ -264,48 +264,54 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     const user = await UserModel.findById(userId).exec();
     const cab = await Car.findById(cab_id).exec();
     const driverDetails = await Driver.findOne({ carDetails: cab_id }).exec();
+    
     if (!user) {
       throw new Error("User does not exist");
     }
     if (!cab) {
-      return "Cab does not exist";
+      throw new Error("Cab does not exist");
     }
 
     // Calculate distances and durations
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], pickup_lat, pickup_lng);
-    const pickup_distance = pickupTime.distance;
-    const pickup_duration = pickupTime.formattedDuration;
+    const pickup_distance = pickupTime.distance.toString(); 
+    const pickup_duration = pickupTime.formattedDuration.toString(); 
     
-    const trip = await calculatePickupTime(pickup_lat,pickup_lng, drop_lat, drop_lng);
-    const trip_distance = trip.distance;
-    const trip_duration = trip.formattedDuration;
+    const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
+    const trip_distance = trip.distance.toString(); 
+    const trip_duration = trip.formattedDuration.toString(); 
 
-    //calculate trip amount
-    const distance = parseFloat(trip.distance);
+    // Calculate trip amount
+    const distance = parseFloat(trip_distance);
     const ratePerKm = parseFloat(cab.rate_per_km);
-    const trip_amount = `₹ ${(distance * ratePerKm).toFixed(2)}  `;
+    const trip_amount = `₹ ${(distance * ratePerKm).toFixed(2)}`; // Format as string
 
+    // Format the current time
     const date = new Date();
     const options = { hour: '2-digit', minute: '2-digit', hour12: true };
     const current_time = date.toLocaleTimeString('en-US', options);
+
     const user_name = `${user.firstName} ${user.lastName}`;
 
+    // Create an object with all the ride request details as strings for emission as a json
+    const rideRequest = {
+      current_time: current_time.toString(),
+      user_name: user_name.toString(),
+      trip_distance: trip_distance, 
+      trip_duration: trip_duration, 
+      trip_amount: trip_amount, 
+      pickup_address: pickup_address.toString(),
+      pickup_lat: pickup_lat.toString(),
+      pickup_lng: pickup_lng.toString(),
+      drop_address: drop_address.toString(),
+      drop_lat: drop_lat.toString(),
+      drop_lng: drop_lng.toString(),
+      pickup_distance: pickup_distance, 
+      pickup_duration: pickup_duration 
+    };
+
     // Emit the ride request event with detailed information
-    io.emit('ride-request', {
-      current_time,
-      user_name,
-      trip_distance,
-      trip_duration,
-      trip_amount,
-      pickup_address,
-      pickup_lat,
-      pickup_lng,
-      drop_address,
-      drop_lat,
-      drop_lng,
-      pickup_distance,
-      pickup_duration
-    });
+    io.emit('ride-request', rideRequest);
 
     return "Success";
   } catch (error) {
@@ -313,3 +319,4 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     throw new Error('Failed to trigger ride request');
   }
 }
+
