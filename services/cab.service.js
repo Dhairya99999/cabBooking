@@ -274,12 +274,12 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     // Calculate distances and durations
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], pickup_lat, pickup_lng);
-    const pickup_distance = pickupTime.distance.toString(); 
-    const pickup_duration = pickupTime.formattedDuration.toString(); 
+    const pickup_distance = pickupTime.distance; // Convert to string
+    const pickup_duration = pickupTime.formattedDuration; // Convert to string
     
     const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
-    const trip_distance = trip.distance.toString(); 
-    const trip_duration = trip.formattedDuration.toString(); 
+    const trip_distance = trip.distance; 
+    const trip_duration = trip.formattedDuration;
 
     // Calculate trip amount
     const distance = parseFloat(trip_distance);

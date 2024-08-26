@@ -7,8 +7,8 @@ import connectDB from './constants/db.js';
 dotenv.config();
 
 import userRouter from './routes/user.route.js';
-import rideRoutes from './routes/ride.route.js'; // Ensure the correct path
 import cabRoutes from './routes/cab.routes.js';
+import driverRouter from './routes/driver.routes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -34,6 +34,7 @@ app.use('/', (req, res, next) => {
 
 app.use('/user', userRouter);
 app.use('/cab', cabRoutes);
+app.use('/driver',driverRouter);
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
