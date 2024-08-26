@@ -21,6 +21,9 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new SocketIOServer(server);
 
+//setting io instance for req.app
+app.set('io',io);
+
 // Root Route
 app.use('/', (req, res, next) => {
   if (req.path === '/') {
@@ -30,7 +33,6 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/user', userRouter);
-app.use('/rides', rideRoutes(io)); // Pass the `io` instance here
 app.use('/cab', cabRoutes);
 
 server.listen(port, '0.0.0.0', () => {

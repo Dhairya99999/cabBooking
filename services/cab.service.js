@@ -6,6 +6,14 @@ import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
 import { UserModel } from '../models/user.model.js';
 
+
+
+const broadcastMessage = (io,event,message) =>{
+  io.emit(event,message);
+}
+
+
+
 export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
 
@@ -83,7 +91,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     const response = {
       route: `${startRoute} - ${endRoute}`,  
       date: formatDate(new Date()), 
-      pickup_time: pickupTime, 
+      pickup_time: pickupTime.formattedDuration, 
       car: {
         car_name: carDetails.car_name,
         car_type: carDetails.car_type,
@@ -175,6 +183,7 @@ async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
     const result = response.data.rows[0].elements[0];
     
     if (result.status === 'OK') {
+      const distance = result.distance.text;
       const durationInSeconds = result.duration.value; // duration in seconds
       const durationInMinutes = Math.round(durationInSeconds / 60);
       
@@ -194,7 +203,10 @@ async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
         formattedDuration += `${minutes} min${minutes > 1 ? 's' : ''}`;
       }
       
-      return formattedDuration || '0 minutes';
+      return {
+        formattedDuration: formattedDuration || '0 minutes',
+        distance
+      };
     } else {
       throw new Error(`API returned status: ${result.status}`);
     }
@@ -245,18 +257,59 @@ export const getBookingHistory = async (userId) => {
   }
 };
 
-export const triggerRideRequest = async(userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng)=>{
-  //Socket connection plus connection to DB pending
 
-  const user = await UserModel.findById(userId)
-  const cab = await Car.findById(cab_id);
-  if(!user){
-    throw error("User does not exists")
-  }
-  if(!cab){
-    return "Cab does not exists"
-  }
-  else {
-    return "Success"
+export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng) => {
+  try {
+    // Fetch user and cab details
+    const user = await UserModel.findById(userId).exec();
+    const cab = await Car.findById(cab_id).exec();
+    const driverDetails = await Driver.findOne({ carDetails: cab_id }).exec();
+    if (!user) {
+      throw new Error("User does not exist");
+    }
+    if (!cab) {
+      return "Cab does not exist";
+    }
+
+    // Calculate distances and durations
+    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], pickup_lat, pickup_lng);
+    const pickup_distance = pickupTime.distance;
+    const pickup_duration = pickupTime.formattedDuration;
+    
+    const trip = await calculatePickupTime(pickup_lat,pickup_lng, drop_lat, drop_lng);
+    const trip_distance = trip.distance;
+    const trip_duration = trip.formattedDuration;
+
+    //calculate trip amount
+    const distance = parseFloat(trip.distance);
+    const ratePerKm = parseFloat(cab.rate_per_km);
+    const trip_amount = distance * ratePerKm;
+
+    const date = new Date();
+    const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+    const current_time = date.toLocaleTimeString('en-US', options);
+    const user_name = `${user.firstName} ${user.lastName}`;
+
+    // Emit the ride request event with detailed information
+    io.emit('ride-request', {
+      current_time,
+      user_name,
+      trip_distance,
+      trip_duration,
+      trip_amount,
+      pickup_address,
+      pickup_lat,
+      pickup_lng,
+      drop_address,
+      drop_lat,
+      drop_lng,
+      pickup_distance,
+      pickup_duration
+    });
+
+    return "Success";
+  } catch (error) {
+    console.error('Error triggering ride request:', error.message);
+    throw new Error('Failed to trigger ride request');
   }
 }

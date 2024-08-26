@@ -7,8 +7,8 @@ const rideRoutes = (io) => {
   // Create a ride request
   router.post('/request', async (req, res) => {
     try {
-      // const { userID, pickupLocation, dropLocation } = req.body;
-      const rideRequest = await createRideRequest(io);
+      const { userID, pickupLocation, dropLocation } = req.body;
+      const rideRequest = await createRideRequest(io, userID, pickupLocation, dropLocation);
       io.emit('ride-request', rideRequest); // Notify all clients about the new ride request
       res.status(201).json(rideRequest);
     } catch (error) {

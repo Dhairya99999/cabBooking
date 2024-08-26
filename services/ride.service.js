@@ -11,27 +11,27 @@ const broadcastMessage = (io, event, message) => {
 };
 
 // Create a new ride request
-const createRideRequest = async (io) => {
-    // try {
-    //     const rideRequest = new RideRequest({
-    //         userID,
-    //         pickupLocation: {
-    //             type: 'Point',
-    //             coordinates: [pickupLocation.longitude, pickupLocation.latitude],
-    //         },
-    //         dropLocation: {
-    //             type: 'Point',
-    //             coordinates: [dropLocation.longitude, dropLocation.latitude],
-    //         },
-    //     });
+const createRideRequest = async (io, userID, pickupLocation, dropLocation) => {
+    try {
+        const rideRequest = new RideRequest({
+            userID,
+            pickupLocation: {
+                type: 'Point',
+                coordinates: [pickupLocation.longitude, pickupLocation.latitude],
+            },
+            dropLocation: {
+                type: 'Point',
+                coordinates: [dropLocation.longitude, dropLocation.latitude],
+            },
+        });
 
-    //     await rideRequest.save();
+        await rideRequest.save();
         // Emit custom 'ride-request' event with a message 'hi'
-        broadcastMessage(io, 'ride-request', { message: 'hi', data: {} });
-    //     return rideRequest;
-    // } catch (error) {
-    //     throw new Error('Error creating ride request: ' + error.message);
-    // }
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: rideRequest });
+        return rideRequest;
+    } catch (error) {
+        throw new Error('Error creating ride request: ' + error.message);
+    }
 };
 
 // Accept a ride request

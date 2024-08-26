@@ -69,7 +69,10 @@ export const triggerRideRequestController = async (req,res)=>{
         data: {}
       });
     }
-    const response = await triggerRideRequest(userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng);
+
+    const io = req.app.get('io');
+
+    const response = await triggerRideRequest(io, userId, cab_id, pickup_address, pickup_lat, pickup_lng, drop_address, drop_lat, drop_lng);
     if(!response){
       res.status(400).json({status:false, message:"Cannot initiate a request", data:{}})
     }
