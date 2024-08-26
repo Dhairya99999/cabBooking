@@ -1,44 +1,41 @@
 import RideRequest from "../models/ride.model.js";
 
-// Helper function to send a message to a specific WebSocket client
-const sendMessageToClient = (client, message) => {
-    client.send(JSON.stringify(message));
+// Helper function to send a message to a specific Socket.IO client
+const sendMessageToClient = (client, event, message) => {
+    client.emit(event, message);
 };
 
-// Broadcast a message to all connected WebSocket clients
-const broadcastMessage = (webSocketServer, message) => {
-    webSocketServer.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            sendMessageToClient(client, message);
-        }
-    });
+// Broadcast a message to all connected Socket.IO clients
+const broadcastMessage = (io, event, message) => {
+    io.emit(event, message);
 };
 
 // Create a new ride request
-const createRideRequest = async (webSocketServer, userID, pickupLocation, dropLocation) => {
-    try {
-        const rideRequest = new RideRequest({
-            userID,
-            pickupLocation: {
-                type: 'Point',
-                coordinates: [pickupLocation.longitude, pickupLocation.latitude],
-            },
-            dropLocation: {
-                type: 'Point',
-                coordinates: [dropLocation.longitude, dropLocation.latitude],
-            },
-        });
+const createRideRequest = async (io) => {
+    // try {
+    //     const rideRequest = new RideRequest({
+    //         userID,
+    //         pickupLocation: {
+    //             type: 'Point',
+    //             coordinates: [pickupLocation.longitude, pickupLocation.latitude],
+    //         },
+    //         dropLocation: {
+    //             type: 'Point',
+    //             coordinates: [dropLocation.longitude, dropLocation.latitude],
+    //         },
+    //     });
 
-        await rideRequest.save();
-        broadcastMessage(webSocketServer, { type: 'NEW_RIDE_REQUEST', data: rideRequest });
-        return rideRequest;
-    } catch (error) {
-        throw new Error('Error creating ride request: ' + error.message);
-    }
+    //     await rideRequest.save();
+        // Emit custom 'ride-request' event with a message 'hi'
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: {} });
+    //     return rideRequest;
+    // } catch (error) {
+    //     throw new Error('Error creating ride request: ' + error.message);
+    // }
 };
 
 // Accept a ride request
-const acceptRide = async (webSocketServer, driverID, rideID) => {
+const acceptRide = async (io, driverID, rideID) => {
     try {
         const rideRequest = await RideRequest.findById(rideID);
         if (!rideRequest) throw new Error('Ride request not found');
@@ -52,7 +49,8 @@ const acceptRide = async (webSocketServer, driverID, rideID) => {
         rideRequest.updatedAt = new Date();
 
         await rideRequest.save();
-        broadcastMessage(webSocketServer, { type: 'RIDE_ACCEPTED', data: rideRequest });
+        // Emit custom 'ride-request' event with a message 'hi'
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: rideRequest });
         return rideRequest;
     } catch (error) {
         throw new Error('Error accepting ride request: ' + error.message);
@@ -60,7 +58,7 @@ const acceptRide = async (webSocketServer, driverID, rideID) => {
 };
 
 // Start a ride
-const startRide = async (webSocketServer, driverID, rideID) => {
+const startRide = async (io, driverID, rideID) => {
     try {
         const rideRequest = await RideRequest.findOne({ _id: rideID, driverID });
         if (!rideRequest) throw new Error('Ride request not found');
@@ -73,7 +71,8 @@ const startRide = async (webSocketServer, driverID, rideID) => {
         rideRequest.updatedAt = new Date();
 
         await rideRequest.save();
-        broadcastMessage(webSocketServer, { type: 'RIDE_STARTED', data: rideRequest });
+        // Emit custom 'ride-request' event with a message 'hi'
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: rideRequest });
         return rideRequest;
     } catch (error) {
         throw new Error('Error starting ride: ' + error.message);
@@ -81,7 +80,7 @@ const startRide = async (webSocketServer, driverID, rideID) => {
 };
 
 // Complete the ride
-const completeRide = async (webSocketServer, driverID, rideID) => {
+const completeRide = async (io, driverID, rideID) => {
     try {
         const rideRequest = await RideRequest.findOne({ _id: rideID, driverID });
         if (!rideRequest) throw new Error('Ride request not found');
@@ -94,7 +93,8 @@ const completeRide = async (webSocketServer, driverID, rideID) => {
         rideRequest.updatedAt = new Date();
 
         await rideRequest.save();
-        broadcastMessage(webSocketServer, { type: 'RIDE_COMPLETED', data: rideRequest });
+        // Emit custom 'ride-request' event with a message 'hi'
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: rideRequest });
         return rideRequest;
     } catch (error) {
         throw new Error('Error completing ride: ' + error.message);
@@ -102,7 +102,7 @@ const completeRide = async (webSocketServer, driverID, rideID) => {
 };
 
 // Cancel the ride
-const cancelRide = async (webSocketServer, userID, rideID) => {
+const cancelRide = async (io, userID, rideID) => {
     try {
         const rideRequest = await RideRequest.findOne({ _id: rideID, userID });
         if (!rideRequest) throw new Error('Ride request not found');
@@ -115,13 +115,13 @@ const cancelRide = async (webSocketServer, userID, rideID) => {
         rideRequest.updatedAt = new Date();
 
         await rideRequest.save();
-        broadcastMessage(webSocketServer, { type: 'RIDE_CANCELLED', data: rideRequest });
+        // Emit custom 'ride-request' event with a message 'hi'
+        broadcastMessage(io, 'ride-request', { message: 'hi', data: rideRequest });
         return rideRequest;
     } catch (error) {
         throw new Error('Error cancelling ride: ' + error.message);
     }
 };
-
 
 export {
     createRideRequest,

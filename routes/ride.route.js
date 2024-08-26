@@ -1,19 +1,15 @@
 import express from "express";
-import {createRideRequest,
-     acceptRide,
-      startRide,
-       completeRide,
-        cancelRide} from "../services/ride.service.js"
+import { createRideRequest, acceptRide, startRide, completeRide, cancelRide } from "../services/ride.service.js";
 
 const router = express.Router();
 
-const rideRoutes = (webSocketServer) => {
-
+const rideRoutes = (io) => {
   // Create a ride request
   router.post('/request', async (req, res) => {
     try {
-      const { userID, pickupLocation, dropLocation } = req.body;
-      const rideRequest = await createRideRequest(webSocketServer, userID, pickupLocation, dropLocation);
+      // const { userID, pickupLocation, dropLocation } = req.body;
+      const rideRequest = await createRideRequest(io);
+      io.emit('ride-request', rideRequest); // Notify all clients about the new ride request
       res.status(201).json(rideRequest);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -24,7 +20,8 @@ const rideRoutes = (webSocketServer) => {
   router.post('/accept', async (req, res) => {
     try {
       const { driverID, rideID } = req.body;
-      const rideRequest = await acceptRide(webSocketServer, driverID, rideID);
+      const rideRequest = await acceptRide(io, driverID, rideID);
+      io.emit('ride-accepted', rideRequest); // Notify all clients about the accepted ride
       res.status(200).json(rideRequest);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -35,7 +32,8 @@ const rideRoutes = (webSocketServer) => {
   router.post('/start', async (req, res) => {
     try {
       const { driverID, rideID } = req.body;
-      const rideRequest = await startRide(webSocketServer, driverID, rideID);
+      const rideRequest = await startRide(io, driverID, rideID);
+      io.emit('ride-started', rideRequest); // Notify all clients about the started ride
       res.status(200).json(rideRequest);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -46,7 +44,8 @@ const rideRoutes = (webSocketServer) => {
   router.post('/complete', async (req, res) => {
     try {
       const { driverID, rideID } = req.body;
-      const rideRequest = await completeRide(webSocketServer, driverID, rideID);
+      const rideRequest = await completeRide(io, driverID, rideID);
+      io.emit('ride-completed', rideRequest); // Notify all clients about the completed ride
       res.status(200).json(rideRequest);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -57,7 +56,8 @@ const rideRoutes = (webSocketServer) => {
   router.post('/cancel', async (req, res) => {
     try {
       const { userID, rideID } = req.body;
-      const rideRequest = await cancelRide(webSocketServer, userID, rideID);
+      const rideRequest = await cancelRide(io, userID, rideID);
+      io.emit('ride-canceled', rideRequest); // Notify all clients about the canceled ride
       res.status(200).json(rideRequest);
     } catch (error) {
       res.status(500).json({ error: error.message });

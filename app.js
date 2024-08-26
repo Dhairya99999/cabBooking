@@ -7,7 +7,7 @@ import connectDB from './constants/db.js';
 dotenv.config();
 
 import userRouter from './routes/user.route.js';
-import rideRoutes from './routes/cab.routes.js'; 
+import rideRoutes from './routes/ride.route.js'; // Ensure the correct path
 import cabRoutes from './routes/cab.routes.js';
 
 const app = express();
@@ -30,7 +30,7 @@ app.use('/', (req, res, next) => {
 });
 
 app.use('/user', userRouter);
-app.use('/rides', rideRoutes); 
+app.use('/rides', rideRoutes(io)); // Pass the `io` instance here
 app.use('/cab', cabRoutes);
 
 server.listen(port, '0.0.0.0', () => {
@@ -42,8 +42,13 @@ io.on('connection', (socket) => {
   console.log('New client connected');
 
   // Example event handler
+  socket.on('ride-request', (data) => {
+    console.log('Received ride-request with data:', data);
+    socket.emit('responseEvent', { message: 'Data received' });
+  });
+
   socket.on('message', (data) => {
-    console.log('Received exampleEvent with data:', data);
+    console.log('Received message with data:', data);
     socket.emit('responseEvent', { message: 'Data received' });
   });
 
