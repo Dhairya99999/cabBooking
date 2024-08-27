@@ -2,7 +2,15 @@ import mongoose from 'mongoose';
 import Car from './car.model.js';  
 
 const driverSchema = new mongoose.Schema({
-  name: {
+  firstName : {
+    type:String,
+    required :true
+  },
+  lastName :{
+    type:String,
+    required: true
+  },
+  fullName: {
     type: String,
     required: true,
   },
@@ -15,11 +23,9 @@ const driverSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'],
-      required: true,
     },
     coordinates: {
       type: [Number],
-      required: true,
     },
   },
   isAvailable: {

@@ -5,7 +5,7 @@ import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; //
 import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
 import { UserModel } from '../models/user.model.js';
-
+import Ride from '../models/ride.model.js';
 
 
 const broadcastMessage = (io,event,message) =>{
@@ -274,8 +274,8 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     // Calculate distances and durations
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], pickup_lat, pickup_lng);
-    const pickup_distance = pickupTime.distance; // Convert to string
-    const pickup_duration = pickupTime.formattedDuration; // Convert to string
+    const pickup_distance = pickupTime.distance; 
+    const pickup_duration = pickupTime.formattedDuration; 
     
     const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
     const trip_distance = trip.distance; 
@@ -310,8 +310,11 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       pickup_duration: pickup_duration 
     };
 
+const ride = new Ride(rideRequest);
+const savedRide = await ride.save();
+
     // Emit the ride request event with detailed information
-    io.emit('ride-request', rideRequest);
+    io.emit('ride-request', savedRide);
 
     return "Success";
   } catch (error) {
