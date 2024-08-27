@@ -55,7 +55,8 @@ const rideSchema = new mongoose.Schema({
     required: true
   },
   status_accept:{
-    type:Boolean
+    type:Boolean,
+    default: false
   }
 });
 

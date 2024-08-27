@@ -3,6 +3,7 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import connectDB from './constants/db.js';  
+import Driver from './models/driver.model.js';
 
 dotenv.config();
 
@@ -38,11 +39,21 @@ server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
 });
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {  
-  console.log('New client connected');
+  console.log('New client connected', socket.id);
 
-  // Example event handler
+  // Handle driver registration
+  socket.on('register-driver', async (driverId) => {
+    try {
+      // Update driver with socketId
+      await Driver.updateOne({ _id: driverId }, { $set: { socketId: socket.id } });
+      console.log(`Driver ${driverId} registered with socketId ${socket.id}`);
+    } catch (error) {
+      console.error('Error registering driver:', error);
+    }
+  });
+
+  // Example event handlers
   socket.on('ride-request', (data) => {
     console.log('Received ride-request with data:', data);
     socket.emit('responseEvent', { message: 'Data received' });
