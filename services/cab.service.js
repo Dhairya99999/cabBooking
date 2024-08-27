@@ -314,7 +314,7 @@ const ride = new Ride(rideRequest);
 const savedRide = await ride.save();
 
     // Emit the ride request event with detailed information
-    io.emit('ride-request', savedRide);
+    io.emit('ride-request', {ride_id:savedRide._id, ...rideRequest});
 
     return "Success";
   } catch (error) {
