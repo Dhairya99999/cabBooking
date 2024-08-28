@@ -23,6 +23,11 @@ const carSchema = new mongoose.Schema({
     type:Boolean
   },
 
+  driver_id:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Driver',  
+  },
+
   passenger_capacity:{
     type:String
   },

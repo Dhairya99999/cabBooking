@@ -1,6 +1,7 @@
 import Driver from '../models/driver.model.js';
 import Car from '../models/car.model.js';
 import Booking from "../models/booking.model.js"
+import Category from '../models/category.model.js';
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
 import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
@@ -29,21 +30,20 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
       },
     };
   }
-  // Fetch available drivers
 
-  // const drivers = await Driver.find(query).populate('carDetails');  //IMPORTANT
+  
+    const categories = await Category.find().populate('carDetails');  
 
-    const drivers = await Driver.find().populate('carDetails');   //just for development purposes to list data
   // Calculate the distance between start and end locations once
   const distance = calculateDistance(startLocation, endLocation);
 
   // Prepare the list of cabs with calculated fare
-  const cabs = drivers.map((driver) => {
-    const carDetails = driver.carDetails;
+  const cabs = categories.map((category) => {
+    const carDetails = category.carDetails[0];
     const fare = calculateFare(carDetails?.rate_per_km, distance);
 
     return {
-      id: carDetails?._id.toString(),
+      id: carDetails?._id,
       car_model: carDetails?.car_name,
       car_type: carDetails?.car_type,
       rate_per_km: `₹${carDetails?.rate_per_km}`,
