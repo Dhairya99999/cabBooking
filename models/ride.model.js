@@ -48,11 +48,9 @@ const rideSchema = new mongoose.Schema({
   },
   pickup_distance: {
     type: String,
-    required: true
   },
   pickup_duration: {
     type: String,
-    required: true
   },
   status_accept:{
     type:Boolean,
@@ -61,6 +59,10 @@ const rideSchema = new mongoose.Schema({
   userId:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users'
+  },
+  isSearching :{
+    type:Boolean,
+    default: true
   }
 });
 

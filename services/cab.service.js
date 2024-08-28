@@ -266,7 +266,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     const user = await UserModel.findById(userId).exec();
     const cab = await Car.findById(cab_id).exec();
     const driverDetails = await Driver.find({ carDetails: cab_id, is_on_duty: true }).exec(); // Fetch all drivers that are on duty
-    
+
     if (!user) {
       throw new Error("User does not exist");
     }
@@ -291,7 +291,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     const user_name = `${user.firstName} ${user.lastName}`;
 
-    // Create an object with all the ride request details
+    // Create a base object for the ride request
     const baseRideRequest = {
       current_time: current_time.toString(),
       user_name: user_name.toString(),
@@ -306,6 +306,10 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       drop_lng: drop_lng.toString(),
       userId: userId,
     };
+
+    // Create a new ride request
+    const ride = new Ride(baseRideRequest);
+    const savedRide = await ride.save();
 
     // Calculate distances and times for each driver
     const driversWithDetails = await Promise.all(driverDetails.map(async (driver) => {
@@ -328,6 +332,9 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     const emitToDriver = async (index) => {
       if (index >= driversWithDetails.length) {
         console.log('All drivers have been notified or no driver is available.');
+        await Ride.findByIdAndUpdate(savedRide._id, {
+          isSearching : false
+        }, { new: true });
         return;
       }
 
@@ -338,20 +345,21 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
         pickup_duration: driver.pickup_duration,
       };
 
-      const ride = new Ride(rideRequest);
-      const savedRide = await ride.save();
+      // Update the existing ride with new pickup location and duration
+      await Ride.findByIdAndUpdate(savedRide._id, {
+        pickup_distance: driver.pickup_distance,
+        pickup_duration: driver.pickup_duration,
+      }, { new: true });
 
-      io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest }); 
-      // io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
-
-
+      // io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
         if (updatedRide && updatedRide.status_accept === false) {
           emitToDriver(index + 1); // Move to the next driver
         }
-      }, 20000); // 20 seconds
+      }, 2000); // 20 seconds
     };
 
     // Start emitting the request to the first driver
