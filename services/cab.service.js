@@ -39,17 +39,18 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
 
   // Prepare the list of cabs with calculated fare
   const cabs = drivers.map((driver) => {
-    const fare = calculateFare(driver.carDetails.rate_per_km, distance);
+    const carDetails = driver.carDetails;
+    const fare = calculateFare(carDetails?.rate_per_km, distance);
 
     return {
-      id: driver.carDetails._id.toString(),
-      car_model: driver.carDetails.car_name,
-      car_type: driver.carDetails.car_type,
-      rate_per_km: `₹${driver.carDetails.rate_per_km}`,
-      tagline: driver.carDetails.tagline || 'Your ride, your choice',
+      id: carDetails?._id.toString(),
+      car_model: carDetails?.car_name,
+      car_type: carDetails?.car_type,
+      rate_per_km: `₹${carDetails?.rate_per_km}`,
+      tagline: carDetails?.tagline || 'Your ride, your choice',
       fare: `₹${parseFloat(fare.toFixed(2))}`, // Fare calculated based on distance and rate per km
       fare_amount_display: `₹${fare.toFixed(2)}`, // Display format with currency symbol
-      image_url :driver.carDetails.image_url,
+      image_url :carDetails?.image_url,
     };
   });
 

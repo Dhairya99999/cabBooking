@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import Car from './car.model.js';  
 
 const driverSchema = new mongoose.Schema({
   firstName : {
@@ -16,7 +15,7 @@ const driverSchema = new mongoose.Schema({
   },
   carDetails: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: Car,  
+    ref: 'Car',  
     required: true,
   },
   location: {
