@@ -11,5 +11,5 @@ router.post('/cab-details', fetchCabDetails);
 // Route to get booking history
 router.get('/booking-history', verifyToken, fetchBookingHistory);
 //Route for trigger request
-router.post('/trigger-request',triggerRideRequestController)
+router.post('/trigger-ride-request',triggerRideRequestController)
 export default router;
