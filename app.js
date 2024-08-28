@@ -17,6 +17,7 @@ const port = process.env.PORT || 3000;
 connectDB();
 
 app.use(express.json());
+app.use(express.static('public'));
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server);
@@ -43,11 +44,11 @@ io.on('connection', (socket) => {
   console.log('New client connected', socket.id);
 
   // Handle driver registration
-  socket.on('register-driver', async (driverId) => {
+  socket.on('register-driver', async (driver_id) => {
     try {
       // Update driver with socketId
-      await Driver.updateOne({ _id: driverId }, { $set: { socketId: socket.id } });
-      console.log(`Driver ${driverId} registered with socketId ${socket.id}`);
+     const updatedId = await Driver.updateOne({ _id: driver_id }, { $set: { socketId: socket.id } });
+      console.log(`Driver ${driver_id} registered with socketId ${socket.id}`);
     } catch (error) {
       console.error('Error registering driver:', error);
     }

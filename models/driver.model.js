@@ -42,8 +42,8 @@ const driverSchema = new mongoose.Schema({
   }],
   verification_text:{
     type:String
-  }
-
+  },
+  socketId: { type: String, required: false } 
 });
 
 driverSchema.index({ location: '2dsphere' });

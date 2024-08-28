@@ -57,6 +57,10 @@ const rideSchema = new mongoose.Schema({
   status_accept:{
     type:Boolean,
     default: false
+  },
+  userId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users'
   }
 });
 

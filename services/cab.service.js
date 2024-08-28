@@ -303,7 +303,8 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       pickup_lng: pickup_lng.toString(),
       drop_address: drop_address.toString(),
       drop_lat: drop_lat.toString(),
-      drop_lng: drop_lng.toString()
+      drop_lng: drop_lng.toString(),
+      userId: userId,
     };
 
     // Calculate distances and times for each driver
@@ -340,7 +341,9 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       const ride = new Ride(rideRequest);
       const savedRide = await ride.save();
 
-      io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest }); 
+      // io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+
 
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
@@ -348,7 +351,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
         if (updatedRide && updatedRide.status_accept === false) {
           emitToDriver(index + 1); // Move to the next driver
         }
-      }, 3000); // 20 seconds
+      }, 20000); // 20 seconds
     };
 
     // Start emitting the request to the first driver
