@@ -317,7 +317,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       const pickupLocation = { latitude: pickup_lat, longitude: pickup_lng };
       const distance = geolib.getDistance(driverLocation, pickupLocation);
 
-      if (distance <= 10000) { // Filter drivers within 10km (10000 meters)
+      if (distance ) { // Filter drivers within 10km (10000 meters)
         // Calculate pickup time for this driver
         const pickupTime = await calculatePickupTime(driverLocation.latitude, driverLocation.longitude, pickup_lat, pickup_lng);
         const pickup_distance = pickupTime.distance; 
@@ -357,8 +357,8 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
         pickup_duration: driver.pickup_duration,
       }, { new: true });
 
-      io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
-      // io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      // io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+       io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
