@@ -330,7 +330,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     // Function to emit ride request to the next driver in the list
     const emitToDriver = async (index) => {
-      if (index >= driversWithDetails.length) {
+      if (index >= driversWithDetails.length-1) {
         console.log('All drivers have been notified or no driver is available.');
         await Ride.findByIdAndUpdate(savedRide._id, {
           isSearching : false
