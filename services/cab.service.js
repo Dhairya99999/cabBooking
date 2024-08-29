@@ -2,13 +2,13 @@ import Driver from '../models/driver.model.js';
 import Car from '../models/car.model.js';
 import Booking from "../models/booking.model.js"
 import Category from '../models/category.model.js';
+import Ride from '../models/ride.model.js';
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
 import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
 import { UserModel } from '../models/user.model.js';
-import Ride from '../models/ride.model.js';
 import geolib from 'geolib';
-
+import mongoose from 'mongoose';
 
 const broadcastMessage = (io,event,message) =>{
   io.emit(event,message);
@@ -357,12 +357,12 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
         pickup_duration: driver.pickup_duration,
       }, { new: true });
 
-      // io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
-       io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      //  io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
-        if (updatedRide && updatedRide.status_accept === false) {
+        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === false) {
           emitToDriver(index + 1); // Move to the next driver
         }
       }, 20000); // 20 seconds
@@ -371,9 +371,27 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     // Start emitting the request to the first driver
     emitToDriver(0);
 
-    return "Success";
+    return savedRide._id;
   } catch (error) {
     console.error('Error triggering ride request:', error.message);
     throw new Error('Failed to trigger ride request');
   }
 };
+
+export const cancelRideRequest = async (user_id, ride_id)=>{
+
+  const customer = await UserModel.findById(user_id);
+  const ride = await Ride.findOne({ _id: ride_id, userId: user_id });
+  // const ride = await Ride.findById(ride_id);
+  if(!customer){
+    throw "Customer does not exists"
+  }
+  if(!ride){
+    throw "Ride is Invalid"
+  }
+
+ride.isSearching = false;
+await ride.save()
+return "Ride search is cancelled"
+
+}

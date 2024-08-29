@@ -1,4 +1,4 @@
-import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest } from '../services/cab.service.js';
+import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest, cancelRideRequest } from '../services/cab.service.js';
 
 // Controller to handle fetching available cabs
 export const getAvailableCabs = async (req, res) => {
@@ -76,8 +76,25 @@ export const triggerRideRequestController = async (req,res)=>{
     if(!response){
       res.status(400).json({status:false, message:"Cannot initiate a request", data:{}})
     }
-    res.status(200).json({status:true, message:"Success", data:{}})
+    res.status(200).json({status:true, message:"Success", data:{ride_id:response}})
   }catch(error){
     res.status(500).json({status:false, message:error.message, data:{}})
   }
+}
+
+export const cancelRideRequestController = async (req,res) =>{
+try{
+const user_id = req.user.userId;
+const {ride_id} = req.body;
+const response = await cancelRideRequest(user_id, ride_id);
+if (!response){
+  throw "Error cancelling Ride"
+}
+res.status(200).json({status:true, message: response, data:{}})
+}catch(error)
+{
+  res.status(500).json({status:false, message:error, data:{}})
+}
+
+
 }
