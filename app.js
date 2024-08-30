@@ -1,9 +1,15 @@
 import express from 'express';
 import http from 'http';
+import swaggerUi from 'swagger-ui-express';
 import { Server as SocketIOServer } from 'socket.io';
 import dotenv from 'dotenv';
 import connectDB from './constants/db.js';  
 import Driver from './models/driver.model.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -18,6 +24,14 @@ connectDB();
 
 app.use(express.json());
 app.use(express.static('public'));
+
+// Dynamically import JSON file with assertions
+const swaggerDocument = await import('./public/swagger.json', {
+  assert: { type: 'json' }
+});
+
+// Serve Swagger API docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument.default));
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server);

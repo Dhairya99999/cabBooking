@@ -23,6 +23,8 @@
     "mongoose": "^8.5.3",
     "nodemon": "^3.1.4",
     "socket.io": "^4.7.5",
+    "swagger": "^0.7.5",
+    "swagger-ui-express": "^5.0.1",
     "websocket": "^1.0.35",
     "ws": "^8.18.0"
   }
