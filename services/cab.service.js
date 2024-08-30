@@ -295,6 +295,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     const baseRideRequest = {
       current_time: current_time.toString(),
       user_name: user_name.toString(),
+      user_phone:user.mobileNumber.toString(),
       trip_distance: trip_distance, 
       trip_duration: trip_duration, 
       trip_amount: trip_amount, 
@@ -349,16 +350,18 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
         ...baseRideRequest,
         pickup_distance: driver.pickup_distance,
         pickup_duration: driver.pickup_duration,
+        driverId: driver._id,
       };
 
       // Update the existing ride with new pickup location and duration
       await Ride.findByIdAndUpdate(savedRide._id, {
         pickup_distance: driver.pickup_distance,
         pickup_duration: driver.pickup_duration,
+        driverId: driver._id
       }, { new: true });
 
       io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
-      //  io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
+      //  io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest, driverId: driver._id });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
@@ -378,20 +381,39 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
   }
 };
 
-export const cancelRideRequest = async (user_id, ride_id)=>{
+export const cancelRideRequest = async (io, user_id, ride_id)=>{
 
-  const customer = await UserModel.findById(user_id);
-  const ride = await Ride.findOne({ _id: ride_id, userId: user_id });
-  // const ride = await Ride.findById(ride_id);
-  if(!customer){
-    throw "Customer does not exists"
+  try {
+
+    // Find the customer and ride
+    const customer = await UserModel.findById(user_id).exec();
+    const ride = await Ride.findOne({ _id: ride_id, userId: user_id }).exec();
+    const driver = await Driver.findById(ride.driverId);
+    // Validation
+    if (!customer) {
+      return { status: false, message: 'Customer does not exist', data: {} };
+    }
+    if (!ride) {
+      return { status: false, message: 'Ride is invalid or does not belong to this user', data: {} };
+    }
+    if (!driver) {
+      return { status: false, message: 'Ride is invalid or does not belong to this driver', data: {} };
+    }
+
+
+    // Check if the ride can be cancelled
+    if (ride.can_be_cancelled) {
+      ride.isSearching = false;
+      await ride.save();
+
+      // socket emission to drivers of cancellation
+      io.to(driver.socketId).emit('ride-request', { message: 'The ride has been cancelled by the user' });
+
+      return { status: true, message: 'Ride search is cancelled', data: {} };
+    } else {
+      return { status: false, message: 'Ride cannot be cancelled now', data: {} };
+    }
+  } catch (error) {
+    return { status: false, message: error, data: {} };
   }
-  if(!ride){
-    throw "Ride is Invalid"
-  }
-
-ride.isSearching = false;
-await ride.save()
-return "Ride search is cancelled"
-
 }

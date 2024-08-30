@@ -60,9 +60,30 @@ const rideSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users'
   },
+  driverId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref: 'Drivers'
+  },
   isSearching :{
     type:Boolean,
     default: true
+  },
+  otp:{
+    type:String
+  },
+  user_phone:{
+    type: String
+  },
+  driver_phone:{
+    type:String
+  },  
+  can_be_cancelled: {
+    type:Boolean,
+    default: true
+  },
+  isStarted:{
+    type:Boolean, 
+    default: false
   }
 });
 

@@ -84,9 +84,10 @@ export const triggerRideRequestController = async (req,res)=>{
 
 export const cancelRideRequestController = async (req,res) =>{
 try{
+  const io = req.app.get('io');
 const user_id = req.user.userId;
 const {ride_id} = req.body;
-const response = await cancelRideRequest(user_id, ride_id);
+const response = await cancelRideRequest(io, user_id, ride_id);
 if (!response){
   throw "Error cancelling Ride"
 }
