@@ -1,4 +1,4 @@
-import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest, cancelRideRequest } from '../services/cab.service.js';
+import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest, cancelRideRequest, completeRide } from '../services/cab.service.js';
 
 // Controller to handle fetching available cabs
 export const getAvailableCabs = async (req, res) => {
@@ -96,6 +96,41 @@ res.status(200).json({status:true, message: response, data:{}})
 {
   res.status(500).json({status:false, message:error, data:{}})
 }
-
-
 }
+
+export const completeRideController = async (req, res) => {
+  try {
+    const { ride_id } = req.body;
+
+    
+    if (!ride_id) {
+      throw new Error('Ride ID is required');
+    }
+
+    // Fetch ride details
+    const response = await completeRide(ride_id);
+
+    // Check if response is valid
+    if (!response) {
+      throw new Error('Error billing the ride');
+    }
+
+  
+    res.status(200).json({
+      status: true,
+      message: 'Billing details are fetched',
+      data: response 
+    });
+
+  } catch (error) {
+    // Log error details for debugging
+    console.error('Error in completeRideController:', error);
+
+    // Send error response
+    res.status(500).json({
+      status: false,
+      message: error.message || 'Internal server error',
+      data: {}
+    });
+  }
+};

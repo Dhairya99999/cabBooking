@@ -19,7 +19,14 @@ const userSchema = new Schema(
     // password:{
     //     type:String
     // }
+    socketId:{
+        type:String
     },
+    profile_img:{
+        type:String
+    }
+    },
+    
 
     {
         timestamps: true,

@@ -13,7 +13,12 @@ import mongoose from 'mongoose';
 const broadcastMessage = (io,event,message) =>{
   io.emit(event,message);
 }
-
+function convertCurrencyStringToNumber(currencyString) {
+  // Remove the currency symbol and any commas or spaces
+  const numericString = currencyString.replace(/[^0-9.-]/g, '');
+  // Convert to number
+  return parseFloat(numericString);
+}
 
 
 export const listAvailableCabs = async (startLocation, endLocation) => {
@@ -280,7 +285,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     const trip_duration = trip.formattedDuration;
 
     // Calculate trip amount
-    const distance = parseFloat(trip_distance);
+    const distance = convertCurrencyStringToNumber(trip_distance);
     const ratePerKm = parseFloat(cab.rate_per_km);
     const trip_amount = `₹ ${(distance * ratePerKm).toFixed(2)}`; // Format as string
 
@@ -318,7 +323,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       const pickupLocation = { latitude: pickup_lat, longitude: pickup_lng };
       const distance = geolib.getDistance(driverLocation, pickupLocation);
 
-      if (distance ) { // Filter drivers within 10km (10000 meters)
+      if (distance < 10000) { // Filter drivers within 10km (10000 meters)
         // Calculate pickup time for this driver
         const pickupTime = await calculatePickupTime(driverLocation.latitude, driverLocation.longitude, pickup_lat, pickup_lng);
         const pickup_distance = pickupTime.distance; 
@@ -416,4 +421,41 @@ export const cancelRideRequest = async (io, user_id, ride_id)=>{
   } catch (error) {
     return { status: false, message: error, data: {} };
   }
-}
+};
+
+export const completeRide = async (ride_id) => {
+  try {
+    // Fetch ride details and populate driverId with driver details
+    const ride = await Ride.findById(ride_id).populate('driverId').exec();
+
+    if (!ride) {
+      throw new Error("Ride does not exist");
+    }
+
+    // Check if the driverId is populated correctly
+    const driver = ride.driverId;
+
+    if (!driver) {
+      throw new Error("Driver details are not available");
+    }
+
+    // Prepare the response object
+    const response = {
+      driver_image: driver.profile_img,
+      driver_name: `${driver.firstName} ${driver.lastName}`,
+      pickup_address: ride.pickup_address,
+      drop_address: ride.drop_address,
+      trip_id: ride._id,
+      vehicle_number: driver.vehicle_number,
+      date_time_ride: ride.startTime,
+      trip_time: ride.trip_time, 
+      extra_km_charge: ride.extra_km_charge,
+      total_amount: ride.total_amount, 
+    };
+
+    return response;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to complete ride: ' + error.message);
+  }
+};

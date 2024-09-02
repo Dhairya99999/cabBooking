@@ -62,7 +62,7 @@ const rideSchema = new mongoose.Schema({
   },
   driverId:{
     type:mongoose.Schema.Types.ObjectId,
-    ref: 'Drivers'
+    ref: 'Driver'
   },
   isSearching :{
     type:Boolean,
@@ -91,6 +91,15 @@ const rideSchema = new mongoose.Schema({
   completedTime:{
     type:String
   },
+  trip_time:{
+    type:String
+  },
+  extra_km_charge:{
+    type:String
+  },
+total_amount:{
+  type:String
+}
 });
 
 // Create the Ride model
