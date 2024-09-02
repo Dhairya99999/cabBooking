@@ -123,11 +123,8 @@ export const completeRideController = async (req, res) => {
     });
 
   } catch (error) {
-    // Log error details for debugging
-    console.error('Error in completeRideController:', error);
-
-    // Send error response
-    res.status(500).json({
+    
+      res.status(500).json({
       status: false,
       message: error.message || 'Internal server error',
       data: {}
