@@ -20,7 +20,26 @@ function convertCurrencyStringToNumber(currencyString) {
   return parseFloat(numericString);
 }
 
-
+function formatDateTime(inputDateStr) {
+  // Convert the string to a Date object
+  const dateObj = new Date(inputDateStr);
+  
+  // Extract date components
+  const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+  const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+  const day = dateObj.getDate().toString().padStart(2, '0');
+  const year = dateObj.getFullYear();
+  const hours24 = dateObj.getHours();
+  const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+  
+  // Convert to 12-hour format
+  const isPM = hours24 >= 12;
+  const hours12 = hours24 % 12 || 12;
+  const period = isPM ? 'PM' : 'AM';
+  
+  // Format the final output
+  return `${weekday} ${month} ${day} ${year} ${hours12}:${minutes} ${period}`;
+}
 export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
 
@@ -451,7 +470,7 @@ export const completeRide = async (ride_id) => {
       drop_address: ride.drop_address,
       trip_id: ride._id,
       vehicle_number: driver.vehicle_number,
-      date_time_ride: ride.startTime,
+      date_time_ride: formatDateTime(ride.startTime),
       trip_time: ride.trip_time, 
       extra_km_charge: ride.extra_km_charge,
       distance_travel: ride.trip_distance ,
