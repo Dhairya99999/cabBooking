@@ -315,6 +315,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     // Create a new ride request
     const ride = new Ride(baseRideRequest);
+    ride.status = "Pending";
     const savedRide = await ride.save();
 
     // Calculate distances and times for each driver and filter by distance
@@ -409,6 +410,7 @@ export const cancelRideRequest = async (io, user_id, ride_id)=>{
     // Check if the ride can be cancelled
     if (ride.can_be_cancelled) {
       ride.isSearching = false;
+      ride.status = "Cancelled"
       await ride.save();
 
       // socket emission to drivers of cancellation
@@ -432,6 +434,8 @@ export const completeRide = async (ride_id) => {
       throw new Error("Ride does not exist");
     }
 
+    ride.status = "Completed";
+    await ride.save();
     // Check if the driverId is populated correctly
     const driver = ride.driverId;
 
@@ -450,6 +454,8 @@ export const completeRide = async (ride_id) => {
       date_time_ride: ride.startTime,
       trip_time: ride.trip_time, 
       extra_km_charge: ride.extra_km_charge,
+      distance_travel: ride.trip_distance ,
+      distance_fare: ride.trip_amount,
       total_amount: ride.total_amount, 
     };
 
