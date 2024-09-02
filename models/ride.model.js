@@ -84,7 +84,13 @@ const rideSchema = new mongoose.Schema({
   isStarted:{
     type:Boolean, 
     default: false
-  }
+  },
+  startTime:{
+    type:String
+  },
+  completedTime:{
+    type:String
+  },
 });
 
 // Create the Ride model

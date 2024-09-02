@@ -365,7 +365,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
-        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === false) {
+        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === true) {
           emitToDriver(index + 1); // Move to the next driver
         }
       }, 20000); // 20 seconds
