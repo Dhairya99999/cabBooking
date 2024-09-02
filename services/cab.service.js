@@ -407,7 +407,7 @@ export const cancelRideRequest = async (io, user_id, ride_id)=>{
       await ride.save();
 
       // socket emission to drivers of cancellation
-      io.to(driver.socketId).emit('ride-request', { message: 'The ride has been cancelled by the user' });
+      io.to(driver.socketId).emit('ride-request-cancel', { message: 'The ride has been cancelled by the user' });
 
       return { status: true, message: 'Ride search is cancelled', data: {} };
     } else {
