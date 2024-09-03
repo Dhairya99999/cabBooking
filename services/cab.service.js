@@ -447,6 +447,13 @@ export const cancelRideRequest = async (io, user_id, ride_id)=>{
       ride.status = "Cancelled"
       await ride.save();
 
+        // Remove on_going_ride_id from driver
+    await Driver.updateOne(
+      { _id: ride.driverId },
+      { $unset: { on_going_ride_id: "" } }
+    );
+
+
       // socket emission to drivers of cancellation
       io.to(driver.socketId).emit('ride-request-cancel', { message: 'The ride has been cancelled by the user' });
 
