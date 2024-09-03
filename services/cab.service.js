@@ -281,8 +281,8 @@ export const getBookingHistory = async (userId) => {
         car_image: booking.driverId.vehicle_image,
         startLocation: booking.pickup_address,
         endLocation: booking.drop_address,
-        kmCovered: `${booking.trip_distance} km`,
-        amountPaid: `₹${booking.total_amount || booking.trip_amount}`,
+        kmCovered: `${booking.trip_distance}`,
+        amountPaid: `${booking.total_amount || booking.trip_amount}`,
         date: isToday(booking.booking_date) ? 'Today' : formatDate(new Date(booking.booking_date)),
       })),
     };
