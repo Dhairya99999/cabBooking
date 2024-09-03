@@ -1,6 +1,5 @@
 import Driver from '../models/driver.model.js';
 import Car from '../models/car.model.js';
-import Booking from "../models/booking.model.js"
 import Category from '../models/category.model.js';
 import Ride from '../models/ride.model.js';
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
@@ -40,6 +39,13 @@ function formatDateTime(inputDateStr) {
   // Format the final output
   return `${weekday} ${month} ${day} ${year} ${hours12}:${minutes} ${period}`;
 }
+
+const isToday = (date) => {
+  const today = new Date();
+  const givenDate = new Date(date);
+  return today.toDateString() === givenDate.toDateString();
+};
+
 export const listAvailableCabs = async (startLocation, endLocation) => {
   const query = { isAvailable: true };
 
@@ -245,37 +251,39 @@ async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
 export const getBookingHistory = async (userId) => {
   try {
     // Fetch all bookings for the user
-
-    // const bookings = await Booking.find({ user: userId }); !!important
-    const bookings = await Booking.find(); // just for development purposes to display data
+     const bookings = await Ride.find({
+      userId: userId,
+      status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
+    })
+    .populate('driverId')
+    .exec();
 
     // Separate bookings into categories
-    const cancelledBookings = bookings.filter(booking => booking.status === 'CANCELLED');
-    const ongoingAndCompletedBookings = bookings.filter(booking => booking.status !== 'CANCELLED');
+    const cancelledBookings = bookings.filter(booking => booking.status === 'Cancelled');
+    const ongoingAndCompletedBookings = bookings.filter(booking =>
+      ['Ongoing', 'Accepted', 'Completed'].includes(booking.status)
+    );
 
     return {
-  
       cancelledBookings: cancelledBookings.map(booking => ({
         id: booking._id.toString(),
         status: booking.status,
-        car_name: booking.car_name,
-        car_image: booking.car_image,
-        startLocation: booking.startLocation,
-        endLocation: booking.endLocation,
-        kmCovered: `${booking.kmCovered} km`,
-        amountPaid: `₹${booking.amountPaid}`,
-        date: formatDate(booking.date),
+        car_name: booking.driverId.vehicle_model,
+        car_image: booking.driverId.vehicle_image,
+        startLocation: booking.pickup_address,
+        endLocation: booking.drop_address,
+        date: isToday(booking.booking_date) ? 'Today' : formatDate(new Date(booking.booking_date)),
       })),
       ongoingAndCompletedBookings: ongoingAndCompletedBookings.map(booking => ({
         id: booking._id.toString(),
         status: booking.status,
-        car_name: booking.car_name,
-        car_image: booking.car_image,
-        startLocation: booking.startLocation,
-        endLocation: booking.endLocation,
-        kmCovered: `${booking.kmCovered} km`,
-        amountPaid: `₹${booking.amountPaid}`,
-        date: formatDate(booking.date),
+        car_name: booking.driverId.vehicle_model,
+        car_image: booking.driverId.vehicle_image,
+        startLocation: booking.pickup_address,
+        endLocation: booking.drop_address,
+        kmCovered: `${booking.trip_distance} km`,
+        amountPaid: `₹${booking.total_amount || booking.trip_amount}`,
+        date: isToday(booking.booking_date) ? 'Today' : formatDate(new Date(booking.booking_date)),
       })),
     };
   } catch (error) {
@@ -289,8 +297,13 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     // Fetch user and cab details
     const user = await UserModel.findById(userId).exec();
     const cab = await Car.findById(cab_id).exec();
-    const driverDetails = await Driver.find({ carDetails: cab_id, is_on_duty: true }).exec(); // Fetch all drivers that are on duty
-
+    const driverDetails = await Driver.find({
+      carDetails: cab_id,         // Match drivers with specific category
+      is_on_duty: true,           // Ensure the driver is on duty
+      $or: [
+        { on_going_ride_id: { $exists: false } }, // ensure that the driver is not on another ride
+      ]
+    }).exec();
     if (!user) {
       throw new Error("User does not exist");
     }
@@ -335,6 +348,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     // Create a new ride request
     const ride = new Ride(baseRideRequest);
     ride.status = "Pending";
+    ride.booking_date = new Date();
     const savedRide = await ride.save();
 
     // Calculate distances and times for each driver and filter by distance
@@ -363,7 +377,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     // Function to emit ride request to the next driver in the list
     const emitToDriver = async (index) => {
       if (index >= filteredDrivers.length) {
-        console.log('All drivers have been notified or no driver is available.');
+        // console.log('All drivers have been notified or no driver is available.');
         await Ride.findByIdAndUpdate(savedRide._id, {
           isSearching: false
         }, { new: true });
@@ -386,11 +400,12 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       }, { new: true });
 
       io.to(driver.socketId).emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
-      //  io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest, driverId: driver._id });
+      //  io.emit('ride-request', { ride_id: savedRide._id, ...rideRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await Ride.findById(savedRide._id).exec();
-        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === true) {
+        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === true && updatedRide.status === "Pending") // if the ride is accepted by any driver, cancelled by user, or is ongoing then it wont be transmitted to the next driver
+        {  
           emitToDriver(index + 1); // Move to the next driver
         }
       }, 20000); // 20 seconds
@@ -464,7 +479,7 @@ export const completeRide = async (ride_id) => {
 
     // Prepare the response object
     const response = {
-      driver_image: driver.profile_img,
+      driver_image: driver.profile_img || "https://images.unsplash.com/photo-1504620776737-8965fde5c079?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       driver_name: `${driver.firstName} ${driver.lastName}`,
       pickup_address: ride.pickup_address,
       drop_address: ride.drop_address,

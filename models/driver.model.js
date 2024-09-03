@@ -130,7 +130,7 @@ const driverSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Ride',
   },
-});
+}, { timestamps: true });
 
 driverSchema.index({ location: '2dsphere' });
 
