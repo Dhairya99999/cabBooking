@@ -61,7 +61,19 @@ io.on('connection', (socket) => {
   socket.on('register-driver', async (driver_id) => {
     try {
       // Update driver with socketId
-     const updatedId = await Driver.updateOne({ _id: driver_id }, { $set: { socketId: socket.id } });
+      const driver = await Driver.findOneAndUpdate(
+        { _id: driver_id },
+        { $set: { socketId: socket.id } },
+        { new: true }
+      ).populate('on_going_ride_id').exec();
+  
+
+     if(driver.on_going_ride_id){
+      io.to(driver.socketId).emit('ride-request', { ride_id: on_going_ride_id._id, on_going_ride_id });
+     }
+     else{
+      console.log("No ongoing ride for the registered driver")
+     }
       console.log(`Driver ${driver_id} registered with socketId ${socket.id}`);
     } catch (error) {
       console.error('Error registering driver:', error);
