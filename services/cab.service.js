@@ -311,6 +311,10 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       throw new Error("Cab does not exist");
     }
 
+    if(user.on_going_ride_id){
+      return res.status(200).json({status:false, message:"You already have an existing ride", data:{}})
+    }
+
     // Calculate trip distance and duration
     const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
     const trip_distance = trip.distance; 
@@ -452,6 +456,12 @@ export const cancelRideRequest = async (io, user_id, ride_id)=>{
       { _id: ride.driverId },
       { $unset: { on_going_ride_id: "" } }
     );
+
+         // Remove on_going_ride_id from customer
+         await UserModel.updateOne(
+          { _id: ride.userId },
+          { $unset: { on_going_ride_id: "" } }
+        );
 
 
       // socket emission to drivers of cancellation
