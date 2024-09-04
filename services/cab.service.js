@@ -139,7 +139,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
         free_waiting_time: carDetails.free_waiting_time,
       },
       driver_details: {
-        verification: driverDetails.verification_text,
+        verification: carDetails.verification,
         driver_rating: driverDetails.driver_rating,
         cab_rating: carDetails.rating,  
       },

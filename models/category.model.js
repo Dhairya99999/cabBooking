@@ -72,6 +72,9 @@ const categorySchema = new mongoose.Schema({
     },
     tagline:{
       type:String
+    },
+    verification:{
+      type:String
     }
     
 
