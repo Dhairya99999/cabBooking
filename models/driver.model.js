@@ -104,7 +104,7 @@ const driverSchema = new mongoose.Schema({
   },
   carDetails: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Car',
+    ref: 'categories',
     required: true,
   },
   isAvailable: {

@@ -5,11 +5,6 @@ const categorySchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    carDetails: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Car',  
-        required: true,
-      }],
       image_url:{
         type:String
       },

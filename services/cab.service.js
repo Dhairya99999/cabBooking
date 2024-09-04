@@ -61,7 +61,7 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
   }
 
   
-    const categories = await Category.find().populate('carDetails');  
+    const categories = await Category.find();  
 
   // Calculate the distance between start and end locations once
   const distance = calculateDistance(startLocation, endLocation);
