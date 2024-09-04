@@ -115,7 +115,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
 
     //calculate pickup time
     const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
-
+    const distance = await calculatePickupTime(startLat, startLng, endLat, endLng);
 
     // Format the response
     const response = {
@@ -143,7 +143,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
         driver_rating: driverDetails.driver_rating,
         cab_rating: carDetails.rating,  
       },
-      inclusions:{ included_kms: pickupTime.distance,
+      inclusions:{ included_kms: distance.distance,
                   ...carDetails.inclusions,
       },
       extra_charges: carDetails.extracharge,
