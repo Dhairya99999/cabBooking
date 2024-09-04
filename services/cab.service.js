@@ -1,5 +1,4 @@
 import Driver from '../models/driver.model.js';
-import Car from '../models/car.model.js';
 import Category from '../models/category.model.js';
 import Ride from '../models/ride.model.js';
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
@@ -69,18 +68,17 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
 
   // Prepare the list of cabs with calculated fare
   const cabs = categories.map((category) => {
-    const carDetails = category.carDetails[0];
-    const fare = calculateFare(carDetails?.rate_per_km, distance);
+    const fare = calculateFare(category.rate_per_km, distance);
 
     return {
-      id: carDetails?._id,
-      car_model: carDetails?.car_name,
-      car_type: carDetails?.car_type,
-      rate_per_km: `₹${carDetails?.rate_per_km}`,
-      tagline: carDetails?.tagline || 'Your ride, your choice',
+      id: category._id,
+      car_model: category.category_name,
+      car_type: category.category_name,
+      rate_per_km: `₹${category.rate_per_km}`,
+      tagline: category.tagline || 'Your ride, your choice',
       fare: `₹${parseFloat(fare.toFixed(2))}`, // Fare calculated based on distance and rate per km
       fare_amount_display: `₹${fare.toFixed(2)}`, // Display format with currency symbol
-      image_url :carDetails?.image_url,
+      image_url :category.image_url,
     };
   });
 
@@ -95,7 +93,7 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
 export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) => {
   try {
     // fetching details
-    const carDetails = await Car.findById(cabId).exec();
+    const carDetails = await Category.findById(cabId).exec();
 
     // Check if car details exist
     if (!carDetails) {
@@ -125,10 +123,10 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
       date: formatDate(new Date()), 
       pickup_time: pickupTime.formattedDuration, 
       car: {
-        car_name: carDetails.car_name,
-        car_type: carDetails.car_type,
+        car_name: carDetails.category_name,
+        car_type: carDetails.category_name,
         image_url: carDetails.image_url,
-        category: carDetails.category,
+        category: carDetails.category_name,
         ac: carDetails.ac,
         passenger_capacity: carDetails.passenger_capacity,
         luggage_capacity: carDetails.luggage_capacity,
@@ -296,7 +294,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
   try {
     // Fetch user and cab details
     const user = await UserModel.findById(userId).exec();
-    const cab = await Car.findById(cab_id).exec();
+    const cab = await Category.findById(cab_id).exec();
     const driverDetails = await Driver.find({
       carDetails: cab_id,         // Match drivers with specific category
       is_on_duty: true,           // Ensure the driver is on duty
