@@ -143,7 +143,9 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
         driver_rating: driverDetails.driver_rating,
         cab_rating: carDetails.rating,  
       },
-      inclusions: carDetails.inclusions,
+      inclusions:{ included_kms: pickupTime.distance,
+                  ...carDetails.inclusions,
+      },
       extra_charges: carDetails.extracharge,
       additional_info: driverDetails.additional_information
     };
