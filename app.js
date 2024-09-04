@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
   
 
      if(driver.on_going_ride_id){
-      io.to(driver.socketId).emit('ride-request', { ride_id: on_going_ride_id._id, on_going_ride_id });
+      io.to(driver.socketId).emit('ride-request', { ride_id: on_going_ride_id._id, ...on_going_ride_id });
      }
      else{
       console.log("No ongoing ride for the registered driver")
