@@ -105,7 +105,8 @@ total_amount:{
 },
 status:{
   type:String
-}
+},
+notificationSent: { type: Boolean, default: false },
 });
 
 // Create the Ride model
