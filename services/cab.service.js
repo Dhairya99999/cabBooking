@@ -6,7 +6,6 @@ import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
 import { UserModel } from '../models/user.model.js';
 import geolib from 'geolib';
-import mongoose from 'mongoose';
 
 const broadcastMessage = (io,event,message) =>{
   io.emit(event,message);
@@ -61,7 +60,7 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
   }
 
   
-    const categories = await Category.find();  
+  const categories = await Category.find({ category_type: { $in: ["ride", "both"] } }); // find cabs that are used for ride or for both transport and rides
 
   // Calculate the distance between start and end locations once
   const distance = calculateDistance(startLocation, endLocation);

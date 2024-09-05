@@ -5,6 +5,12 @@ const categorySchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    category_type:{
+      type:String,
+      enum:['ride','transport','both'],
+      default:'both',
+      required:true
+    },
       image_url:{
         type:String
       },
@@ -71,6 +77,12 @@ const categorySchema = new mongoose.Schema({
       type:String
     },
     verification:{
+      type:String
+    },
+    highlights:[{
+      type:String
+    }],
+    capacity_info:{
       type:String
     }
     

@@ -15,6 +15,7 @@ dotenv.config();
 
 import userRouter from './routes/user.route.js';
 import cabRoutes from './routes/cab.routes.js';
+import transportRouter from './routes/transport.routes.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -49,6 +50,7 @@ app.use('/', (req, res, next) => {
 
 app.use('/user', userRouter);
 app.use('/cab', cabRoutes);
+app.use('/transport', transportRouter);
 
 server.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
