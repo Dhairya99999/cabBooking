@@ -229,8 +229,8 @@ export const getTransportVehicleDetails = async(startLat, startLng, endLat, endL
     highlights: vehicleDetails.highlights,
     included_loading_time: vehicleDetails.inclusions.loading_time,
     distance: distance.distance,
-    fare: fare,
-    rounded_fare: Math.ceil(fare),
+    fare: `₹ ${fare}`,
+    rounded_fare: `₹ ${Math.ceil(fare)}`,
   };
 
    return response;
