@@ -1,4 +1,4 @@
-import { listAvailableTransportCategories } from "../services/transport.service.js";
+import { listAvailableTransportCategories, getTransportVehicleDetails } from "../services/transport.service.js";
 
 // Controller to handle fetching available cabs
 export const getAvailableTransportController = async (req, res) => {
@@ -21,3 +21,22 @@ export const getAvailableTransportController = async (req, res) => {
       res.status(500).json({ status: false, message: error.message, data: {} });
     }
   };
+  export const getTransportVehicleDetailsController = async(req,res) =>{
+    try{
+      const {vehicle_id, start_lat, start_lng, end_lat, end_lng} = req.body;
+
+      
+
+      const response = await getTransportVehicleDetails(start_lat, start_lng, end_lat, end_lng, vehicle_id);
+
+    if (response) {
+      res.status(200).json({ status: true, message: "Transport details fetched", data: response });
+    } else {
+      res.status(200).json({ status: false, message: "Transport details cannot be fetched", data: {} });
+    }
+
+    }catch (error) {
+    res.status(500).json({ status: false, message: error.message, data: {} });
+  }
+  }
+

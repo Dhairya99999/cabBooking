@@ -71,7 +71,10 @@ const categorySchema = new mongoose.Schema({
       },
       toll_charges:{
         type:Boolean
-      }
+      },
+      loading_time:{
+        type:String
+      },
     },
     tagline:{
       type:String

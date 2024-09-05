@@ -5,6 +5,7 @@ import { UserModel } from "../models/user.model.js";
 import axios from "axios";
 import geolib from 'geolib';
 import { calculateDistance, calculateFare } from "../utils/locationUtils.js";
+import { formatDate } from "../utils/miscUtils.js";
 
 function formatDateTime(inputDateStr) {
     // Convert the string to a Date object
@@ -118,6 +119,29 @@ async function getLocationName(latitude, longitude) {
     }
   }
 
+// Helper function to parse duration string and return total minutes
+function parseDuration(durationStr) {
+  const hoursMatch = durationStr.match(/(\d+)\s*hour/);
+  const minutesMatch = durationStr.match(/(\d+)\s*min/);
+  
+  const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+  const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+  
+  return (hours * 60) + minutes; // Total minutes
+}
+
+// Helper function to format time in "12-hour format with AM/PM"
+function formatTime(date) {
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const period = hours >= 12 ? 'PM' : 'AM';
+  
+  hours = hours % 12;
+  hours = hours ? hours : 12; // The hour '0' should be '12'
+  
+  return `${hours}:${minutes} ${period}`;
+}
+
   export const listAvailableTransportCategories = async (startLocation, endLocation) =>{
 
     const query = { isAvailable: true };
@@ -164,3 +188,50 @@ async function getLocationName(latitude, longitude) {
   };
 };
 
+export const getTransportVehicleDetails = async(startLat, startLng, endLat, endLng, vehicleId) => {
+
+  const vehicleDetails = await Category.findById(vehicleId).exec();
+
+  if(!vehicleDetails){
+    throw "Vehicle does not exists"
+  }
+    
+   // Fetch driver details related to the car
+   const driverDetails = await Driver.findOne({ carDetails: vehicleId }).exec();
+
+  //fetch geolocation
+  const [startRoute, endRoute] = await Promise.all([
+    getLocationName(startLat, startLng),
+    getLocationName(endLat, endLng)
+  ]);
+
+  //calculate pickup time
+  const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
+  const distance = await calculatePickupTime(startLat, startLng, endLat, endLng);
+
+  // Parse pickup_duration to total minutes
+  const pickupDurationInMinutes = parseDuration(pickupTime.formattedDuration);
+  
+  // Calculate the pickup time
+  const currentTime = new Date();
+  const pickupTimeDate = new Date(currentTime.getTime() + (pickupDurationInMinutes * 60 * 1000)); // Add duration in milliseconds
+  const pickupTimeFormatted = formatTime(pickupTimeDate);
+
+  // Calculate fare
+  const fare = calculateFare(vehicleDetails.rate_per_km, parseFloat(distance.distance));
+
+  const response = {
+    current_date: formatDate(new Date()),
+    pickup_duration: pickupTime.formattedDuration,
+    pickup_time: pickupTimeFormatted,
+    route: `${startRoute} - ${endRoute}`,
+    vehicle_name: vehicleDetails.category_name,
+    highlights: vehicleDetails.highlights,
+    included_loading_time: vehicleDetails.inclusions.loading_time,
+    distance: distance.distance,
+    fare: fare,
+    rounded_fare: Math.ceil(fare),
+  };
+
+   return response;
+}
