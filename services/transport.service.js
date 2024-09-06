@@ -231,7 +231,60 @@ export const getTransportVehicleDetails = async(startLat, startLng, endLat, endL
     distance: distance.distance,
     fare: `₹ ${fare}`,
     rounded_fare: `₹ ${Math.ceil(fare)}`,
+    image:vehicleDetails.image_url
   };
 
    return response;
+}
+
+export const getGoodsTypes = async (category_id) =>{
+
+  const category = await Category.findById(category_id).exec();
+
+  // Check if the category exists
+  if (!category) {
+    throw "Category does not exist";
+  }
+
+  // Extract the goods_types array from the category
+  const goodsTypes = category.goods_types;
+
+ // Map goodsTypes to the response
+  const response = goodsTypes.map((goods_name, index) => ({
+    goods_id: index,
+    goods_name: goods_name
+  }));
+
+
+
+  return response;
+
+}
+
+
+export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumber, transport_type, start_lat, start_lng, end_lat, end_lng, vehicle_id, userId, goods_type) =>{
+
+  // current_time
+  // user_name 
+  // user_phone
+  //reciever_name
+  //reciever_phone
+  //transport_type
+  //goods_type
+  // trip_distance 
+  // trip_duration 
+  // trip_amount 
+  // pickup_address
+  // pickup_lat
+  // pickup_lng
+  // drop_address
+  // drop_lat
+  // drop_lng
+  // pickup_distance
+  // pickup_duration
+  // userId
+  // driverId
+
+
+
 }

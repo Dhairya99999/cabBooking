@@ -1,4 +1,4 @@
-import { listAvailableTransportCategories, getTransportVehicleDetails } from "../services/transport.service.js";
+import { listAvailableTransportCategories, getTransportVehicleDetails, getGoodsTypes } from "../services/transport.service.js";
 
 // Controller to handle fetching available cabs
 export const getAvailableTransportController = async (req, res) => {
@@ -40,3 +40,17 @@ export const getAvailableTransportController = async (req, res) => {
   }
   }
 
+export const getGoodsController = async(req,res)=>{
+  try{
+  const {category_id} = req.params;
+
+const response = await getGoodsTypes(category_id);
+if(!response){
+  throw new Error("Error fetching goods");
+}
+res.status(200).json({status:true, message:"Goods fetched", data: response})
+
+  }catch (error) {
+    res.status(500).json({ status: false, message: error.message, data: {} });
+  }
+}
