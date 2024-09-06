@@ -88,9 +88,12 @@ const categorySchema = new mongoose.Schema({
     capacity_info:{
       type:String
     },
-    goods_types:[{
-      type:String
-    }]
+    goods_types: [
+      {
+        name: { type: String, required: true },
+        description: { type: String, required: true }
+      }
+    ],  
     
 
 });

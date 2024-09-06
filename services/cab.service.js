@@ -68,7 +68,7 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
   // Prepare the list of cabs with calculated fare
   const cabs = categories.map((category) => {
     const fare = calculateFare(category.rate_per_km, distance);
-
+    const rounded_fare = Math.ceil(fare);
     return {
       id: category._id,
       car_model: category.category_name,
@@ -76,7 +76,7 @@ export const listAvailableCabs = async (startLocation, endLocation) => {
       rate_per_km: `₹${category.rate_per_km}`,
       tagline: category.tagline || 'Your ride, your choice',
       fare: `₹${parseFloat(fare.toFixed(2))}`, // Fare calculated based on distance and rate per km
-      fare_amount_display: `₹${fare.toFixed(2)}`, // Display format with currency symbol
+      fare_amount_display: `₹${rounded_fare}`, // Display format with currency symbol
       image_url :category.image_url,
     };
   });

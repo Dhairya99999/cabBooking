@@ -170,13 +170,13 @@ function formatTime(date) {
   // Prepare the list of cabs with calculated fare
   const transport_vehicles = availableCategories.map((category) => {
     const fare = calculateFare(category.rate_per_km, distance);
-
+    const rounded_fare = Math.ceil(fare);
     return {
       id: category._id,
       transport_model: category.category_name,
       capacity_info: category.capacity_info,
       rate_per_km: `₹${category.rate_per_km}`,
-      fare: `₹${parseFloat(fare.toFixed(2))}`, // Fare calculated based on distance and rate per km
+      fare: `₹${rounded_fare}`, // Fare calculated based on distance and rate per km
       image_url :category.image_url,
     };
   });
@@ -250,10 +250,11 @@ export const getGoodsTypes = async (category_id) =>{
   const goodsTypes = category.goods_types;
 
  // Map goodsTypes to the response
-  const response = goodsTypes.map((goods_name, index) => ({
-    goods_id: index,
-    goods_name: goods_name
-  }));
+ const response = goodsTypes.map((goods, index) => ({
+  goods_id: index,
+  goods_name: goods.name,
+  goods_description: goods.description
+}));
 
 
 
