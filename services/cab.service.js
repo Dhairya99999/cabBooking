@@ -311,7 +311,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
     }
 
     if(user.on_going_ride_id){
-      return res.status(200).json({status:false, message:"You already have an existing ride", data:{}})
+      throw new Error("You already have an existing ride");
     }
 
     // Calculate trip distance and duration

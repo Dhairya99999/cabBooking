@@ -7,6 +7,13 @@ import geolib from 'geolib';
 import { calculateDistance, calculateFare } from "../utils/locationUtils.js";
 import { formatDate } from "../utils/miscUtils.js";
 
+function convertCurrencyStringToNumber(currencyString) {
+  // Remove the currency symbol and any commas or spaces
+  const numericString = currencyString.replace(/[^0-9.-]/g, '');
+  // Convert to number
+  return parseFloat(numericString);
+}
+
 function formatDateTime(inputDateStr) {
     // Convert the string to a Date object
     const dateObj = new Date(inputDateStr);
@@ -263,29 +270,139 @@ export const getGoodsTypes = async (category_id) =>{
 }
 
 
-export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumber, transport_type, start_lat, start_lng, end_lat, end_lng, vehicle_id, userId, goods_type) =>{
-
-  // current_time
-  // user_name 
-  // user_phone
-  //reciever_name
-  //reciever_phone
-  //transport_type
-  //goods_type
-  // trip_distance 
-  // trip_duration 
-  // trip_amount 
-  // pickup_address
-  // pickup_lat
-  // pickup_lng
-  // drop_address
-  // drop_lat
-  // drop_lng
-  // pickup_distance
-  // pickup_duration
-  // userId
-  // driverId
+export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumber, transport_type,pickup_address, drop_address, pickup_lat, pickup_lng, drop_lat, drop_lng, vehicle_id, userId, goods_type) =>{
 
 
+   // Fetch user and cab details
+   const user = await UserModel.findById(userId).exec();
+   const cab = await Category.findById(vehicle_id).exec();
+   const driverDetails = await Driver.find({
+     carDetails: vehicle_id,         // Match drivers with specific category
+     is_on_duty: true,           // Ensure the driver is on duty
+     $or: [
+       { on_going_ride_id: { $exists: false } }, // ensure that the driver is not on another ride
+     ]
+   }).exec();
+   if (!user) {
+     throw new Error("User does not exist");
+   }
+   if (!cab) {
+     throw new Error("Cab does not exist");
+   }
+   if(user.on_going_ride_id){
+     throw new Error ("You already have an existing ride");
+   }
+
+
+   // Calculate trip distance and duration
+   const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
+   const trip_distance = trip.distance; 
+   const trip_duration = trip.formattedDuration;
+
+   // Calculate trip amount
+   const distance = convertCurrencyStringToNumber(trip_distance);
+   const ratePerKm = parseFloat(cab.rate_per_km);
+   const trip_amount = `₹ ${(distance * ratePerKm).toFixed(2)}`; // Format as string
+
+   // Format the current time
+   const date = new Date();
+   const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+   const current_time = date.toLocaleTimeString('en-US', options);
+
+   const user_name = `${user.firstName} ${user.lastName}`;
+
+   // Create a base object for the ride request
+   const baseParcelRequest = {
+     current_time: current_time.toString(),
+     user_name: user_name.toString(),
+     user_phone:user.mobileNumber.toString(),
+     reciever_number:reciever_mobileNumber,
+     reciever_name: reciever_name,
+     goods_type:goods_type,
+     transport_type: transport_type,
+     trip_distance: trip_distance, 
+     trip_duration: trip_duration, 
+     trip_amount: trip_amount, 
+     pickup_address: pickup_address.toString(),
+     pickup_lat: pickup_lat.toString(),
+     pickup_lng: pickup_lng.toString(),
+     drop_address: drop_address.toString(),
+     drop_lat: drop_lat.toString(),
+     drop_lng: drop_lng.toString(),
+     userId: userId,
+   };
+
+   const parcelRide = new transportRide(baseParcelRequest);
+   parcelRide.status = 'Pending';
+   parcelRide.booking_date = new Date();
+   const savedParcelRide = await parcelRide.save();
+
+    // Calculate distances and times for each driver and filter by distance
+    const driversWithDetails = await Promise.all(driverDetails.map(async (driver) => {
+      const driverLocation = { latitude: driver.location.coordinates[0], longitude: driver.location.coordinates[1] };
+      const pickupLocation = { latitude: pickup_lat, longitude: pickup_lng };
+      const distance = geolib.getDistance(driverLocation, pickupLocation);
+
+      if (distance < 10000) { // Filter drivers within 10km (10000 meters)
+        // Calculate pickup time for this driver
+        const pickupTime = await calculatePickupTime(driverLocation.latitude, driverLocation.longitude, pickup_lat, pickup_lng);
+        const pickup_distance = pickupTime.distance; 
+        const pickup_duration = pickupTime.formattedDuration; 
+
+        return { ...driver.toObject(), distance, pickup_distance, pickup_duration };
+      }
+      return null;
+    }));
+
+  
+
+    // Remove null entries from the list
+    const filteredDrivers = driversWithDetails.filter(driver => driver !== null);
+
+    // Sort drivers by distance (nearest first)
+    filteredDrivers.sort((a, b) => a.distance - b.distance);
+
+    // Function to emit ride request to the next driver in the list
+    const emitToDriver = async (index) => {
+      if (index >= filteredDrivers.length) {
+        console.log('All drivers have been notified or no driver is available.');
+        await transportRide.findByIdAndUpdate(savedParcelRide._id, {
+          isSearching: false
+        }, { new: true });
+        return;
+      }
+
+      const driver = filteredDrivers[index];
+      const parcelRequest = {
+        ...baseParcelRequest,
+        pickup_distance: driver.pickup_distance,
+        pickup_duration: driver.pickup_duration,
+        driverId: driver._id,
+      };
+
+      // Update the existing ride with new pickup location and duration
+      await transportRide.findByIdAndUpdate(savedParcelRide._id, {
+        pickup_distance: driver.pickup_distance,
+        pickup_duration: driver.pickup_duration,
+        driverId: driver._id
+      }, { new: true });
+
+      io.to(driver.socketId).emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+  
+      //  io.emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+      // Set a timeout to check the ride status and re-emit if not accepted
+      setTimeout(async () => {
+        const updatedRide = await transportRide.findById(savedParcelRide._id).exec();
+        if (updatedRide && updatedRide.status_accept === false && updatedRide.isSearching === true && updatedRide.status === "Pending") // if the ride is accepted by any driver, cancelled by user, or is ongoing then it wont be transmitted to the next driver
+        {  
+          emitToDriver(index + 1); // Move to the next driver
+        }
+      }, 20000); // 20 seconds
+    };
+
+    // Start emitting the request to the first driver
+    emitToDriver(0);
+
+    return savedParcelRide._id;
 
 }
