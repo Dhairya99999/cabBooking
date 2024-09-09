@@ -423,3 +423,103 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
    return savedParcelRide._id;
 
 }
+
+export const cancelRideRequest = async (io, user_id, ride_id)=>{
+
+  try {
+
+    // Find the customer and ride
+    const customer = await UserModel.findById(user_id).exec();
+    const ride = await transportRide.findOne({ _id: ride_id, userId: user_id }).exec();
+    const driver = await Driver.findById(ride.driverId);
+    // Validation
+    if (!customer) {
+      return { status: false, message: 'Customer does not exist', data: {} };
+    }
+    if (!ride) {
+      return { status: false, message: 'Ride is invalid or does not belong to this user', data: {} };
+    }
+    if (!driver) {
+      return { status: false, message: 'Ride is invalid or does not belong to this driver', data: {} };
+    }
+
+
+    // Check if the ride can be cancelled
+    if (ride.can_be_cancelled) {
+      ride.isSearching = false;
+      ride.status = "Cancelled"
+      await ride.save();
+
+        // Remove on_going_ride_id from driver
+    await Driver.updateOne(
+      { _id: ride.driverId },
+      {  $unset: { 
+        on_going_ride_id: "", 
+        on_going_ride_model: "" 
+      }  }
+    );
+
+         // Remove on_going_ride_id from customer
+         await UserModel.updateOne(
+          { _id: ride.userId },
+          {  $unset: { 
+            on_going_ride_id: "", 
+            on_going_ride_model: "" 
+          }  }
+        );
+
+
+      // socket emission to drivers of cancellation
+      io.to(driver.socketId).emit('ride-request-cancel', { message: 'The ride has been cancelled by the user' });
+
+      return { status: true, message: 'Ride search is cancelled', data: {} };
+    } else {
+      return { status: false, message: 'Ride cannot be cancelled now', data: {} };
+    }
+  } catch (error) {
+    return { status: false, message: error, data: {} };
+  }
+};
+
+export const completeRide = async (ride_id) => {
+  try {
+    // Fetch ride details and populate driverId with driver details
+    const ride = await transportRide.findById(ride_id).populate('driverId').exec();
+
+    if (!ride) {
+      throw new Error("Ride does not exist");
+    }
+
+    ride.status = "Completed";
+    await ride.save();
+    // Check if the driverId is populated correctly
+    const driver = ride.driverId;
+
+    if (!driver) {
+      throw new Error("Driver details are not available");
+    }
+
+    // Prepare the response object
+    const response = {
+      driver_image: driver.profile_img || "https://images.unsplash.com/photo-1504620776737-8965fde5c079?q=80&w=2073&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      driver_name: `${driver.firstName} ${driver.lastName}`,
+      pickup_address: ride.pickup_address,
+      drop_address: ride.drop_address,
+      reciever_name: ride.reciever_name,
+      reciever_number: ride.reciever_number,
+      trip_id: ride._id,
+      vehicle_number: driver.vehicle_number,
+      date_time_ride: formatDateTime(ride.startTime),
+      trip_time: ride.trip_time, 
+      extra_km_charge: ride.extra_km_charge,
+      distance_travel: ride.trip_distance ,
+      distance_fare: ride.trip_amount,
+      total_amount: ride.total_amount, 
+    };
+
+    return response;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to complete ride: ' + error.message);
+  }
+};

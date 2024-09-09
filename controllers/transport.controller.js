@@ -1,4 +1,4 @@
-import { listAvailableTransportCategories, getTransportVehicleDetails, getGoodsTypes, triggerParcelRequest } from "../services/transport.service.js";
+import { listAvailableTransportCategories, getTransportVehicleDetails, getGoodsTypes, triggerParcelRequest, cancelRideRequest, completeRide } from "../services/transport.service.js";
 
 // Controller to handle fetching available cabs
 export const getAvailableTransportController = async (req, res) => {
@@ -131,3 +131,53 @@ export const triggerParcelRequestController = async (req, res) => {
     res.status(500).json({ status: false, message: error.message, data: {} });
   }
 };
+
+export const cancelRideRequestController = async (req,res) =>{
+  try{
+    const io = req.app.get('io');
+  const user_id = req.user.userId;
+  const {ride_id} = req.body;
+  const response = await cancelRideRequest(io, user_id, ride_id);
+  if (!response){
+    throw "Error cancelling Ride"
+  }
+  res.status(200).json({status:true, message: response, data:{}})
+  }catch(error)
+  {
+    res.status(500).json({status:false, message:error, data:{}})
+  }
+  }
+  
+  export const completeRideController = async (req, res) => {
+    try {
+      const { ride_id } = req.body;
+  
+      
+      if (!ride_id) {
+        throw new Error('Ride ID is required');
+      }
+  
+      // Fetch ride details
+      const response = await completeRide(ride_id);
+  
+      // Check if response is valid
+      if (!response) {
+        throw new Error('Error billing the ride');
+      }
+  
+    
+      res.status(200).json({
+        status: true,
+        message: 'Billing details are fetched',
+        data: response 
+      });
+  
+    } catch (error) {
+      
+        res.status(500).json({
+        status: false,
+        message: error.message || 'Internal server error',
+        data: {}
+      });
+    }
+  };
