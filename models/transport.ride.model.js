@@ -36,6 +36,12 @@ const transportRideSchema = new mongoose.Schema({
         type: String, 
         required: true
       },
+      pickup_distance: {
+        type: String,
+      },
+      pickup_duration: {
+        type: String,
+      },
       drop_address: {
         type: String,
         required: true
@@ -109,7 +115,11 @@ const transportRideSchema = new mongoose.Schema({
       goods_type:[{
         type:String
       }
-]
+],
+is_transport_ride:{
+  type:Boolean,
+  default:true
+}
 
 });
 

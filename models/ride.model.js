@@ -106,7 +106,10 @@ total_amount:{
 status:{
   type:String
 },
-
+is_transport_ride:{
+  type:Boolean,
+  default:false
+}
 });
 
 // Create the Ride model

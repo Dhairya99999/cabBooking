@@ -336,6 +336,7 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
      trip_distance: trip_distance, 
      trip_duration: trip_duration, 
      trip_amount: trip_amount, 
+     is_transport_ride: true,
      pickup_address: pickup_address.toString(),
      pickup_lat: pickup_lat.toString(),
      pickup_lng: pickup_lng.toString(),
@@ -400,9 +401,9 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
         driverId: driver._id
       }, { new: true });
 
-     // io.to(driver.socketId).emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+      io.to(driver.socketId).emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
   
-       io.emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+      // io.emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await transportRide.findById(savedParcelRide._id).exec();

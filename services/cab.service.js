@@ -345,6 +345,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       drop_address: drop_address.toString(),
       drop_lat: drop_lat.toString(),
       drop_lng: drop_lng.toString(),
+      is_transport_ride: false,
       userId: userId,
     };
 
