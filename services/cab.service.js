@@ -331,6 +331,9 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
 
     const user_name = `${user.firstName} ${user.lastName}`;
 
+    user.on_going_ride_model="Ride";
+    await user.save();
+
     // Create a base object for the ride request
     const baseRideRequest = {
       current_time: current_time.toString(),
@@ -347,6 +350,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       drop_lng: drop_lng.toString(),
       is_transport_ride: false,
       userId: userId,
+      on_going_ride_model:"Ride",
     };
 
     // Create a new ride request

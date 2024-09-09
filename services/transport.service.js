@@ -324,6 +324,9 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
 
    const user_name = `${user.firstName} ${user.lastName}`;
 
+   user.on_going_ride_model="transportRide";
+   await user.save();
+
    // Create a base object for the ride request
    const baseParcelRequest = {
      current_time: current_time.toString(),
@@ -417,6 +420,6 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
     // Start emitting the request to the first driver
     emitToDriver(0);
 
-    return savedParcelRide._id;
+   return savedParcelRide._id;
 
 }
