@@ -106,10 +106,10 @@ const transportRideSchema = new mongoose.Schema({
       status:{
         type:String
       },
-      goods_type:{
+      goods_type:[{
         type:String
       }
-
+]
 
 });
 

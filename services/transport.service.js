@@ -293,6 +293,19 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
      throw new Error ("You already have an existing ride");
    }
 
+     // Ensure cab has goods_types
+  if (!cab.goods_types || !Array.isArray(cab.goods_types)) {
+    throw new Error("Cab does not have valid goods_types information");
+  }
+
+  // Helper function to get goods type names from indices
+  const getGoodsTypeNames = (indices, goodsTypes) => {
+    return indices.map(index => goodsTypes[index]?.name || "Unknown");
+  };
+
+  // Convert goods_type_indices to goods_type names
+  const goodsTypeNames = getGoodsTypeNames(goods_type, cab.goods_types);
+
 
    // Calculate trip distance and duration
    const trip = await calculatePickupTime(pickup_lat, pickup_lng, drop_lat, drop_lng);
@@ -318,7 +331,7 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
      user_phone:user.mobileNumber.toString(),
      reciever_number:reciever_mobileNumber,
      reciever_name: reciever_name,
-     goods_type:goods_type,
+     goods_type:goodsTypeNames,
      transport_type: transport_type,
      trip_distance: trip_distance, 
      trip_duration: trip_duration, 
@@ -387,9 +400,9 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
         driverId: driver._id
       }, { new: true });
 
-      io.to(driver.socketId).emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+     // io.to(driver.socketId).emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
   
-      //  io.emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
+       io.emit('ride-request', { ride_id: savedParcelRide._id, ...parcelRequest });
       // Set a timeout to check the ride status and re-emit if not accepted
       setTimeout(async () => {
         const updatedRide = await transportRide.findById(savedParcelRide._id).exec();
