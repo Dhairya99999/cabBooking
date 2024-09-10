@@ -112,16 +112,13 @@ is_transport_ride:{
 },
 reciever_name:{
   type:String,
-  required: true
 },
 reciever_number:{
-  type:String,
-  required: true
+  type:String
 },
 transport_type:{
   type:String,
-  enum:['local','outstation'],
-  required: true
+  enum:['local','outstation']
 },
 goods_type:[{
   type:String
