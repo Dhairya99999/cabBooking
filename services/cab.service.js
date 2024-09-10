@@ -353,7 +353,7 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       on_going_ride_model:"Ride",
       reciever_number: "",
       reciever_name: "",
-      goods_type: "",
+      goods_type: [],
       transport_type: "",
     };
 
