@@ -351,6 +351,10 @@ export const triggerRideRequest = async (io, userId, cab_id, pickup_address, pic
       is_transport_ride: false,
       userId: userId,
       on_going_ride_model:"Ride",
+      reciever_number: null,
+      reciever_name: null,
+      goods_type: null,
+      transport_type: null,
     };
 
     // Create a new ride request
