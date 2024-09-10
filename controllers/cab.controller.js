@@ -78,6 +78,7 @@ export const triggerRideRequestController = async (req,res)=>{
     }
     res.status(200).json({status:true, message:"Success", data:{ride_id:response}})
   }catch(error){
+    console.log(error);
     res.status(500).json({status:false, message:error.message, data:{}})
   }
 }
