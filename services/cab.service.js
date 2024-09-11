@@ -1,6 +1,7 @@
 import Driver from '../models/driver.model.js';
 import Category from '../models/category.model.js';
 import Ride from '../models/ride.model.js';
+import transportRide from "../models/transport.ride.model.js";
 import { calculateDistance, calculateFare } from '../utils/locationUtils.js'; // Utility functions for distance and fare calculation
 import axios from "axios";
 import { formatDate } from '../utils/miscUtils.js';
@@ -307,7 +308,7 @@ export const getBookingHistory = async (userId) => {
       .populate('driverId')
       .exec(),
 
-      TransportRide.find({
+      transportRide.find({
         userId: userId,
         status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
       })
