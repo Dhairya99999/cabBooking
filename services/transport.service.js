@@ -14,6 +14,42 @@ function convertCurrencyStringToNumber(currencyString) {
   return parseFloat(numericString);
 }
 
+function findMinimumDuration(durations) {
+  // Helper function to convert duration to minutes
+  const convertToMinutes = (duration) => {
+      // Initialize hours and minutes
+      let hours = 0;
+      let minutes = 0;
+
+      // Split the duration into parts
+      const parts = duration.split(' ');
+
+      // Extract hours and minutes
+      for (let i = 0; i < parts.length; i++) {
+          if (parts[i].endsWith('hours')) {
+              hours = parseInt(parts[i - 1], 10);
+          } else if (parts[i].endsWith('mins')) {
+              minutes = parseInt(parts[i - 1], 10);
+          }
+      }
+
+      // Convert total time to minutes
+      return hours * 60 + minutes;
+  };
+
+  // Convert all durations to minutes
+  const durationsInMinutes = durations.map(convertToMinutes);
+
+  // Find the minimum duration in minutes
+  const minDurationInMinutes = Math.min(...durationsInMinutes);
+
+  // Return the minimum duration in a readable format
+  const minHours = Math.floor(minDurationInMinutes / 60);
+  const minMinutes = minDurationInMinutes % 60;
+
+  return `${minHours} hours ${minMinutes} mins`;
+}
+
 function formatDateTime(inputDateStr) {
     // Convert the string to a Date object
     const dateObj = new Date(inputDateStr);
@@ -219,7 +255,7 @@ export const getTransportVehicleDetails = async(startLat, startLng, endLat, endL
   }
     
    // Fetch driver details related to the car
-   const driverDetails = await Driver.findOne({ carDetails: vehicleId }).exec();
+   const driverDetails = await Driver.find({ carDetails: vehicleId }).exec();
 
   //fetch geolocation
   const [startRoute, endRoute] = await Promise.all([
@@ -227,12 +263,25 @@ export const getTransportVehicleDetails = async(startLat, startLng, endLat, endL
     getLocationName(endLat, endLng)
   ]);
 
+  const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
+    const pickupTime = await calculatePickupTime(
+        driver.location.coordinates[0], // longitude
+        driver.location.coordinates[1], // latitude
+        startLat,
+        startLng
+    );
+    return pickupTime.formattedDuration; // Assuming formattedDuration is a string like "1h 30m"
+}));
+
+ // Find the lowest pickup time
+ const lowestPickupTime = findMinimumDuration(pickupTimes);
+
+
   //calculate pickup time
-  const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
   const distance = await calculatePickupTime(startLat, startLng, endLat, endLng);
 
   // Parse pickup_duration to total minutes
-  const pickupDurationInMinutes = parseDuration(pickupTime.formattedDuration);
+  const pickupDurationInMinutes = parseDuration(lowestPickupTime);
   
   // Calculate the pickup time
   const currentTime = new Date();
@@ -244,7 +293,7 @@ export const getTransportVehicleDetails = async(startLat, startLng, endLat, endL
 
   const response = {
     current_date: formatDate(new Date()),
-    pickup_duration: pickupTime.formattedDuration,
+    pickup_duration: lowestPickupTime,
     pickup_time: pickupTimeFormatted,
     route: `${startRoute} - ${endRoute}`,
     vehicle_name: vehicleDetails.category_name,

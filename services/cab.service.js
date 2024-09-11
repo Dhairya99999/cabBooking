@@ -17,6 +17,42 @@ function convertCurrencyStringToNumber(currencyString) {
   return parseFloat(numericString);
 }
 
+function findMinimumDuration(durations) {
+  // Helper function to convert duration to minutes
+  const convertToMinutes = (duration) => {
+      // Initialize hours and minutes
+      let hours = 0;
+      let minutes = 0;
+
+      // Split the duration into parts
+      const parts = duration.split(' ');
+
+      // Extract hours and minutes
+      for (let i = 0; i < parts.length; i++) {
+          if (parts[i].endsWith('hours')) {
+              hours = parseInt(parts[i - 1], 10);
+          } else if (parts[i].endsWith('mins')) {
+              minutes = parseInt(parts[i - 1], 10);
+          }
+      }
+
+      // Convert total time to minutes
+      return hours * 60 + minutes;
+  };
+
+  // Convert all durations to minutes
+  const durationsInMinutes = durations.map(convertToMinutes);
+
+  // Find the minimum duration in minutes
+  const minDurationInMinutes = Math.min(...durationsInMinutes);
+
+  // Return the minimum duration in a readable format
+  const minHours = Math.floor(minDurationInMinutes / 60);
+  const minMinutes = minDurationInMinutes % 60;
+
+  return `${minHours} hours ${minMinutes} mins`;
+}
+
 function formatDateTime(inputDateStr) {
   // Convert the string to a Date object
   const dateObj = new Date(inputDateStr);
@@ -100,7 +136,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     }
 
     // Fetch driver details related to the car
-    const driverDetails = await Driver.findOne({ carDetails: cabId }).exec();
+    const driverDetails = await Driver.find({ carDetails: cabId }).exec();
 
     //fetch geolocation
     const [startRoute, endRoute] = await Promise.all([
@@ -108,28 +144,32 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
       getLocationName(endLat, endLng)
     ]);
 
-  //  const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
-      // Assume calculatePickupTime takes a driver object and returns a promise
-  //    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
-  //    return pickupTime.formattedDuration;
-  //}));
+    const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
+      const pickupTime = await calculatePickupTime(
+          driver.location.coordinates[0], // longitude
+          driver.location.coordinates[1], // latitude
+          startLat,
+          startLng
+      );
+      return pickupTime.formattedDuration; // Assuming formattedDuration is a string like "1h 30m"
+  }));
 
 
  // Find the lowest pickup time
- // const lowestPickupTime = Math.min(...pickupTimes);
+  const lowestPickupTime = findMinimumDuration(pickupTimes);
     //remove extra address
     // const cleanStartRoute = startRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
     // const cleanEndRoute = endRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
 
     //calculate pickup time
-    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
+    //const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
     const distance = await calculatePickupTime(startLat, startLng, endLat, endLng);
 
     // Format the response
     const response = {
       route: `${startRoute} - ${endRoute}`,  
       date: formatDate(new Date()), 
-      pickup_time: pickupTime.formattedDuration, 
+      pickup_time: lowestPickupTime, 
       car: {
         car_name: carDetails.category_name,
         car_type: carDetails.category_name,
