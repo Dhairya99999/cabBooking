@@ -111,7 +111,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
       // Assume calculatePickupTime takes a driver object and returns a promise
       const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
-      return pickupTime;
+      return pickupTime.formattedDuration;
   }));
 
 
@@ -129,7 +129,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     const response = {
       route: `${startRoute} - ${endRoute}`,  
       date: formatDate(new Date()), 
-      pickup_time: pickupTime.formattedDuration, 
+      pickup_time: pickupTime, 
       car: {
         car_name: carDetails.category_name,
         car_type: carDetails.category_name,
