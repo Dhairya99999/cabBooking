@@ -35,6 +35,21 @@ function formatDateTime(inputDateStr) {
     return `${weekday} ${month} ${day} ${year} ${hours12}:${minutes} ${period}`;
   }
 
+  const getStateFromCoordinates = async (latitude, longitude) => {
+    const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace with your Google Maps API key
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+
+    try {
+        const response = await axios.get(url);
+        const addressComponents = response.data.results[0]?.address_components || [];
+        const stateComponent = addressComponents.find(component => component.types.includes('administrative_area_level_1'));
+        return stateComponent?.short_name || 'Unknown';
+    } catch (error) {
+        console.error('Error fetching state from coordinates:', error);
+        throw new Error('Unable to determine state from coordinates.');
+    }
+};
+
   // geolocation name
 async function getLocationName(latitude, longitude) {
     const API_KEY = process.env.GOOGLE_API_KEY;
@@ -348,6 +363,17 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
      drop_lng: drop_lng.toString(),
      userId: userId,
    };
+
+   //match state
+   const pickupState = await getStateFromCoordinates(pickup_lat, pickup_lng);
+   const dropState = await getStateFromCoordinates(drop_lat, drop_lng);
+
+   if(transport_type === 'local'){
+    if(pickupState !== dropState){
+      res.status(200).json({status:false, message:"The pickup and drop states must be same. Please retry or select Outstation", data:{}})
+    }
+   }
+
 
    const parcelRide = new transportRide(baseParcelRequest);
    parcelRide.status = 'Pending';
