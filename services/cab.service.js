@@ -100,7 +100,7 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
     }
 
     // Fetch driver details related to the car
-    const driverDetails = await Driver.find({ carDetails: cabId }).exec();
+    const driverDetails = await Driver.findOne({ carDetails: cabId }).exec();
 
     //fetch geolocation
     const [startRoute, endRoute] = await Promise.all([
@@ -108,28 +108,28 @@ export const getCabDetails = async (startLat, startLng, endLat, endLng, cabId) =
       getLocationName(endLat, endLng)
     ]);
 
-    const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
+  //  const pickupTimes = await Promise.all(driverDetails.map(async (driver) => {
       // Assume calculatePickupTime takes a driver object and returns a promise
-      const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
-      return pickupTime.formattedDuration;
-  }));
+  //    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
+  //    return pickupTime.formattedDuration;
+  //}));
 
 
  // Find the lowest pickup time
-  const lowestPickupTime = Math.min(...pickupTimes);
+ // const lowestPickupTime = Math.min(...pickupTimes);
     //remove extra address
     // const cleanStartRoute = startRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
     // const cleanEndRoute = endRoute.replace(/,\s*\b\w+\+\w+\b\s*|\b\w+\+\w+\b\s*,?\s*/g, '').trim();
 
     //calculate pickup time
-    const pickupTime = lowestPickupTime;
+    const pickupTime = await calculatePickupTime(driverDetails.location.coordinates[0], driverDetails.location.coordinates[1], startLat, startLng);
     const distance = await calculatePickupTime(startLat, startLng, endLat, endLng);
 
     // Format the response
     const response = {
       route: `${startRoute} - ${endRoute}`,  
       date: formatDate(new Date()), 
-      pickup_time: pickupTime, 
+      pickup_time: pickupTime.formattedDuration, 
       car: {
         car_name: carDetails.category_name,
         car_type: carDetails.category_name,
