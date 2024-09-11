@@ -299,16 +299,28 @@ async function calculatePickupTime(driverLat, driverLng, startLat, startLng) {
 export const getBookingHistory = async (userId) => {
   try {
     // Fetch all bookings for the user
-     const bookings = await Ride.find({
-      userId: userId,
-      status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
-    })
-    .populate('driverId')
-    .exec();
+     const [rideBookings, transportRideBookings] = await Promise.all([
+      Ride.find({
+        userId: userId,
+        status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
+      })
+      .populate('driverId')
+      .exec(),
+
+      TransportRide.find({
+        userId: userId,
+        status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
+      })
+      .populate('driverId')
+      .exec()
+    ]);
+
+        // Combine bookings
+        const allBookings = [...rideBookings, ...transportRideBookings];
 
     // Separate bookings into categories
-    const cancelledBookings = bookings.filter(booking => booking.status === 'Cancelled');
-    const ongoingAndCompletedBookings = bookings.filter(booking =>
+    const cancelledBookings = allBookings.filter(booking => booking.status === 'Cancelled');
+    const ongoingAndCompletedBookings = allBookings.filter(booking =>
       ['Ongoing', 'Accepted', 'Completed'].includes(booking.status)
     );
 
