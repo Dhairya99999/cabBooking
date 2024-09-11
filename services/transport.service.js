@@ -36,7 +36,7 @@ function formatDateTime(inputDateStr) {
   }
 
   const getStateFromCoordinates = async (latitude, longitude) => {
-    const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // Replace with your Google Maps API key
+    const apiKey = process.env.GOOGLE_API_KEY;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
 
     try {
@@ -370,7 +370,7 @@ export const triggerParcelRequest = async(io, reciever_name, reciever_mobileNumb
 
    if(transport_type === 'local'){
     if(pickupState !== dropState){
-      res.status(200).json({status:false, message:"The pickup and drop states must be same. Please retry or select Outstation", data:{}})
+      throw new Error ("The pickup and drop states must be same. Please retry or select Outstation")
     }
    }
 
