@@ -87,7 +87,7 @@ export const getUserByIdService = async (userId)=>{
 export const verifyOtpService = async (mobileNumber, orderId, otp) => {
   try {
     // Bypass condition
-    if (mobileNumber === "9999999999" && otp === "111111") {
+    if (mobileNumber === "9999999999" && otp === "000000") {
       // Bypass verification, no need to call the external service
       // Find user by phone number
       const user = await UserModel.findOne({ mobileNumber: mobileNumber }).select('-createdAt -updatedAt -__v');
