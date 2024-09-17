@@ -58,7 +58,7 @@ export const registerUserController = async (req, res) => {
         }
         // Call the service function
         let user;
-        if(mobileNumber === 9999999999){
+        if(mobileNumber === "9999999999"){
           user = await verifyOtpService(mobileNumber,orderId, otp);
         }
         else{
