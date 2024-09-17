@@ -86,7 +86,21 @@ export const getUserByIdService = async (userId)=>{
 
 export const verifyOtpService = async (mobileNumber, orderId, otp) => {
   try {
-    // Verify OTP with the external service
+    // Bypass condition
+    if (mobileNumber === 9999999999 && otp === 111111) {
+      // Bypass verification, no need to call the external service
+      // Find user by phone number
+      const user = await UserModel.findOne({ mobileNumber: mobileNumber }).select('-createdAt -updatedAt -__v');
+      if (user) {
+        user.isVerified = true; // Update the user as verified
+        await user.save();
+        return user;
+      } else {
+        throw new Error("User not found");
+      }
+    }
+
+    
     const response = await axios.post(
       "https://auth.otpless.app/auth/otp/v1/verify",
       {
@@ -107,7 +121,7 @@ export const verifyOtpService = async (mobileNumber, orderId, otp) => {
 
     if (response.data.isOTPVerified) {
       // Find user by phone number
-      const user = await UserModel.findOne({ mobileNumber: mobileNumber }).select('-createdAt -updatedAt -__v');;
+      const user = await UserModel.findOne({ mobileNumber: mobileNumber }).select('-createdAt -updatedAt -__v');
       if (user) {
         user.isVerified = true; // Update the user as verified
         await user.save();
