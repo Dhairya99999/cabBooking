@@ -319,6 +319,9 @@ export const getBookingHistory = async (userId) => {
         // Combine bookings
         const allBookings = [...rideBookings, ...transportRideBookings];
 
+            // Sort bookings in descending order by date
+    allBookings.sort((a, b) => new Date(b.booking_date) - new Date(a.booking_date));
+
     // Separate bookings into categories
     const cancelledBookings = allBookings.filter(booking => booking.status === 'Cancelled');
     const ongoingAndCompletedBookings = allBookings.filter(booking =>
