@@ -159,3 +159,12 @@ export const resendOtpService = async(orderId)=>{
     throw err;
   }
 }
+
+export const getAllUsers = async() =>{
+  try{
+    const users = await UserModel.find();
+    return users.length;
+  }catch(err){
+    throw err;
+  }
+}

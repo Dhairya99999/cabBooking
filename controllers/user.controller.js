@@ -3,7 +3,8 @@ import {registerUserService,
         getUserByIdService, 
         verifyOtpService,
         resendOtpService,
-        sendOtp} 
+        sendOtp,
+      getAllUsers} 
          from "../services/user.service.js";
 
 const JWT_KEY = process.env.JWT_SECRET;
@@ -102,6 +103,25 @@ export const resendOtpController = async(req,res) =>{
   }catch(error){
     return res.status(500).json({
       status: false, message:"Cannot send OTP" , data: {}
+    });
+  }
+}
+
+export const getAllUsersController = async(req,res) =>{
+  try{
+
+    const response = await getAllUsers();
+    if(response){
+      return res.status(200).json({status:true, message: "Number of users fetched", data:response});
+    }
+    else{
+      return res.status(400).json({status: false, message:"Cannot fetch number of users" , data:{}})
+    }
+
+  }catch(error){
+    console.log(error);
+    return res.status(500).json({
+      status: false, message:error.message , data: {}
     });
   }
 }
