@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAvailableCabs, fetchCabDetails, fetchBookingHistory, triggerRideRequestController, cancelRideRequestController, completeRideController } from '../controllers/cab.controller.js';
+import { getAvailableCabs, fetchCabDetails, fetchBookingHistory, triggerRideRequestController, cancelRideRequestController, completeRideController, fetchRideBookingHistory, fetchTransportBookingHistory } from '../controllers/cab.controller.js';
 import { verifyToken } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -16,4 +16,8 @@ router.post('/trigger-ride-request',triggerRideRequestController)
 router.post('/ride/cancel', verifyToken, cancelRideRequestController);
 //billing
 router.post('/ride/completed', completeRideController);
+
+//route for history for superAdmin
+router.get('/ride-history', fetchRideBookingHistory);
+router.get('/transport-history', fetchTransportBookingHistory);
 export default router;

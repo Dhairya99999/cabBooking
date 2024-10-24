@@ -1,4 +1,4 @@
-import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest, cancelRideRequest, completeRide } from '../services/cab.service.js';
+import { getCabDetails, getBookingHistory, listAvailableCabs, triggerRideRequest, cancelRideRequest, completeRide, getRideBookingHistory, getTransportBookingHistory } from '../services/cab.service.js';
 
 // Controller to handle fetching available cabs
 export const getAvailableCabs = async (req, res) => {
@@ -130,5 +130,24 @@ export const completeRideController = async (req, res) => {
       message: error.message || 'Internal server error',
       data: {}
     });
+  }
+};
+
+
+//fetching ride and transport history for super admin
+export const fetchRideBookingHistory = async (req, res) => {
+  try {
+    const bookingHistory = await getRideBookingHistory();
+    res.status(200).json({ status: true, message: "Booking History Fetched", data: bookingHistory });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message, data:{} });
+  }
+};
+export const fetchTransportBookingHistory = async (req, res) => {
+  try {
+    const bookingHistory = await getTransportBookingHistory();
+    res.status(200).json({ status: true, message: "Booking History Fetched", data: bookingHistory });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message, data:{} });
   }
 };

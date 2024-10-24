@@ -589,3 +589,57 @@ export const completeRide = async (ride_id) => {
     throw new Error('Failed to complete ride: ' + error.message);
   }
 };
+
+
+// fetching history for superAdmin
+export const getTransportBookingHistory = async () => {
+  try {
+    const transportRideBookings = await transportRide.find({
+      status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
+    })
+    .populate('driverId')
+    .exec();
+
+    const formattedBookings = transportRideBookings.map(booking => ({
+      id: booking._id.toString(),
+      status: booking.status,
+      car_name: booking.driverId.vehicle_model,
+      car_image: booking.driverId.vehicle_image,
+      startLocation: booking.pickup_address,
+      endLocation: booking.drop_address,
+      kmCovered: `${booking.trip_distance}`,
+      amountPaid: `${booking.total_amount || booking.trip_amount}`,
+      date: isToday(booking.booking_date) ? 'Today' : formatDate(new Date(booking.booking_date)),
+    }));
+
+    return formattedBookings;
+  } catch (error) {
+    throw new Error('Error fetching transport booking history: ' + error.message);
+  }
+};
+
+export const getRideBookingHistory = async () => {
+  try {
+    const rideBookings = await Ride.find({
+      status: { $in: ['Cancelled', 'Ongoing', 'Accepted', 'Completed'] }
+    })
+    .populate('driverId')
+    .exec();
+
+    const formattedBookings = rideBookings.map(booking => ({
+      id: booking._id.toString(),
+      status: booking.status,
+      car_name: booking.driverId.vehicle_model,
+      car_image: booking.driverId.vehicle_image,
+      startLocation: booking.pickup_address,
+      endLocation: booking.drop_address,
+      kmCovered: `${booking.trip_distance}`,
+      amountPaid: `${booking.total_amount || booking.trip_amount}`,
+      date: isToday(booking.booking_date) ? 'Today' : formatDate(new Date(booking.booking_date)),
+    }));
+
+    return formattedBookings;
+  } catch (error) {
+    throw new Error('Error fetching ride booking history: ' + error.message);
+  }
+};
