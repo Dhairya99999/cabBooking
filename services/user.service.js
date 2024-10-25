@@ -163,7 +163,7 @@ export const resendOtpService = async(orderId)=>{
 export const getAllUsers = async() =>{
   try{
     const users = await UserModel.find();
-    return users.length;
+    return users;
   }catch(err){
     throw err;
   }
