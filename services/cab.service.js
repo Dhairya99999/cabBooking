@@ -603,6 +603,7 @@ export const getTransportBookingHistory = async () => {
     const formattedBookings = transportRideBookings.map(booking => ({
       id: booking._id.toString(),
       status: booking.status,
+      userId : booking.userId,
       car_name: booking.driverId.vehicle_model,
       car_image: booking.driverId.vehicle_image,
       startLocation: booking.pickup_address,
@@ -628,6 +629,7 @@ export const getRideBookingHistory = async () => {
 
     const formattedBookings = rideBookings.map(booking => ({
       id: booking._id.toString(),
+      userId : booking.userId,
       status: booking.status,
       car_name: booking.driverId.vehicle_model,
       car_image: booking.driverId.vehicle_image,
